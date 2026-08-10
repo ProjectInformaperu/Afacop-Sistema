@@ -44,6 +44,9 @@ async function actualizar(id, datos) {
   if (datos.password) {
     data.password_hash = await bcrypt.hash(datos.password, 12);
     data.token_version = { increment: 1 };
+    data.password_cambio = new Date();
+    data.intentos_fallidos = 0;
+    data.bloqueado_hasta = null;
   }
   const usuario = await prisma.usuario.update({ where: { id_usuario: id }, data, include: { asesor: true } });
   return mapUsuario(usuario);

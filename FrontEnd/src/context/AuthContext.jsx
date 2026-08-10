@@ -11,6 +11,7 @@ export const MODULOS = {
   admision: { key: "admision", label: "Admisión", path: "/admision" },
   rutas: { key: "rutas", label: "Rutas", path: "/rutas" },
   acceso: { key: "acceso", label: "Control de Acceso", path: "/acceso" },
+  calidad: { key: "calidad", label: "Calidad ISO 9001", path: "/calidad" },
 };
 
 export const ROLES_CONFIG = {
@@ -20,6 +21,11 @@ export const ROLES_CONFIG = {
   ASESOR: { label: "Asesor", color: "#059669", bg: "rgba(5,150,105,0.1)", modulos: ["principal", "clientes"], descripcion: "Acceso solo a su cartera de clientes asignada." },
   AUDITOR: { label: "Auditor", color: "#D97706", bg: "rgba(217,119,6,0.1)", modulos: ["principal", "clientes", "admision"], descripcion: "Solo lectura para auditoría de clientes y admisión." },
 };
+
+// El SGC es editable por dirección/supervisión y de solo lectura para auditoría.
+for (const role of ["GERENTE", "SUPERVISOR", "AUDITOR"]) {
+  if (!ROLES_CONFIG[role].modulos.includes("calidad")) ROLES_CONFIG[role].modulos.push("calidad");
+}
 
 // Se conserva el export para componentes administrativos antiguos; los usuarios
 // visibles ahora siempre provienen del endpoint protegido del backend.

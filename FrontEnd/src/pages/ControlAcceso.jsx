@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
 import { ROLES_CONFIG, MODULOS, DEMO_USERS } from '../context/AuthContext.jsx';
@@ -257,9 +257,25 @@ export default function ControlAcceso() {
   const [editingRol, setEditingRol] = useState(null);
   const [savedMsg, setSavedMsg] = useState('');
   const [rolModal, setRolModal] = useState(null); // null | { mode: 'create'|'edit', rolKey, rolData }
+  const [auditLog, setAuditLog] = useState([]);
 
   const currentRolesConfig = rolesConfig || ROLES_CONFIG;
   const localUsuarios = usuarios || DEMO_USERS;
+
+  useEffect(() => {
+    if (tab !== 'auditoria') return;
+    api.get('/api/seguridad/auditoria', { params: { limit: 50 } }).then(response => {
+      setAuditLog((response.data.data || []).map(entry => ({
+        id: entry.id_auditoria,
+        desc: `${entry.metodo} ${entry.ruta} · HTTP ${entry.estado_http}`,
+        user: entry.actor || 'anonymous',
+        fecha: new Date(entry.fecha).toLocaleString('es-PE'),
+        tipo: entry.estado_http >= 400 ? 'ALERTA' : 'OPERACIÓN',
+        color: entry.estado_http >= 400 ? '#DC2626' : '#059669',
+        icon: entry.estado_http >= 400 ? <AlertTriangle size={15}/> : <Unlock size={15}/>,
+      })));
+    }).catch(error => showToast(error.response?.data?.error || 'No se pudo cargar la auditoría.', 'error'));
+  }, [tab, api, showToast]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -709,8 +725,8 @@ export default function ControlAcceso() {
             <h3 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: '800', color: '#212529' }}>Registro de Accesos y Cambios</h3>
             <p style={{ margin: '0 0 20px', fontSize: '12px', color: '#6C757D' }}>Historial de operaciones críticas del sistema</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-              {AUDIT_LOG.map((entry, i) => (
-                <div key={i} style={{ display: 'flex', gap: '14px', padding: '12px 0', borderBottom: i < AUDIT_LOG.length - 1 ? '1px solid #F3F4F6' : 'none', alignItems: 'flex-start' }}>
+              {auditLog.map((entry, i) => (
+                <div key={entry.id} style={{ display: 'flex', gap: '14px', padding: '12px 0', borderBottom: i < auditLog.length - 1 ? '1px solid #F3F4F6' : 'none', alignItems: 'flex-start' }}>
                   <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: entry.color + '12', color: entry.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
                     {entry.icon}
                   </div>
@@ -723,6 +739,7 @@ export default function ControlAcceso() {
                   </span>
                 </div>
               ))}
+              {!auditLog.length && <div style={{ padding: '24px', textAlign: 'center', color: '#6C757D' }}>No hay operaciones auditadas para mostrar.</div>}
             </div>
           </div>
 

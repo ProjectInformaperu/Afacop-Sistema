@@ -35,11 +35,25 @@ test('restringe los estados operativos de rutas y visitas', () => {
 
 test('todas las familias de rutas privadas declaran authMiddleware', () => {
   const root = path.resolve('src/routes');
-  const privateRoutes = ['clientes.routes.js', 'admision.routes.js', 'asesores.routes.js', 'asignaciones.routes.js', 'dashboard.routes.js', 'rutas.routes.js', 'usuarios.routes.js', 'visitas.routes.js'];
+  const privateRoutes = ['clientes.routes.js', 'admision.routes.js', 'asesores.routes.js', 'asignaciones.routes.js', 'dashboard.routes.js', 'rutas.routes.js', 'usuarios.routes.js', 'visitas.routes.js', 'calidad.routes.js'];
   for (const file of privateRoutes) {
     const source = fs.readFileSync(path.join(root, file), 'utf8');
     assert.match(source, /authMiddleware/, `${file} debe exigir autenticación`);
   }
+});
+
+test('el SGC ISO 9001 mantiene tipos controlados, historial y segregación de funciones', () => {
+  const service = fs.readFileSync(path.resolve('src/services/calidad.service.js'), 'utf8');
+  const routes = fs.readFileSync(path.resolve('src/routes/calidad.routes.js'), 'utf8');
+  const schema = fs.readFileSync(path.resolve('prisma/schema.prisma'), 'utf8');
+  assert.match(service, /NO_CONFORMIDAD/);
+  assert.match(service, /ACCION_CORRECTIVA/);
+  assert.match(service, /AUDITORIA_INTERNA/);
+  assert.match(service, /REVISION_DIRECCION/);
+  assert.match(routes, /ROLES\.AUDITOR/);
+  assert.match(routes, /editors/);
+  assert.match(schema, /model HistorialCalidad/);
+  assert.match(schema, /version\s+Int/);
 });
 
 test('no se aceptan tokens mediante query string', () => {
@@ -97,4 +111,18 @@ test('el cifrado autenticado de secretos MFA permite recuperar el valor íntegro
   const encrypted = encryptSecret('BASE32SECRETVALUE');
   assert.notEqual(encrypted, 'BASE32SECRETVALUE');
   assert.equal(decryptSecret(encrypted), 'BASE32SECRETVALUE');
+});
+
+test('la configuracion de produccion y las cuentas tienen endurecimiento verificable', () => {
+  const envSource = fs.readFileSync(path.resolve('src/config/env.js'), 'utf8');
+  const server = fs.readFileSync(path.resolve('src/server.js'), 'utf8');
+  const auth = fs.readFileSync(path.resolve('src/services/auth.service.js'), 'utf8');
+  const securityRoutes = fs.readFileSync(path.resolve('src/routes/seguridad.routes.js'), 'utf8');
+  assert.match(envSource, /CORS_ALLOW_ALL no puede habilitarse en producci/);
+  assert.match(envSource, /MAX_LOGIN_FAILURES/);
+  assert.match(server, /strictTransportSecurity/);
+  assert.match(server, /Cache-Control', 'no-store/);
+  assert.match(auth, /bloqueado_hasta/);
+  assert.match(auth, /intentos_fallidos/);
+  assert.match(securityRoutes, /AUDIT_READERS/);
 });

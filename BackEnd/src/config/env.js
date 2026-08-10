@@ -35,6 +35,8 @@ const schema = z.object({
   CORS_ALLOW_ALL: z.enum(['true', 'false']).default('false'),
   TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  MAX_LOGIN_FAILURES: z.coerce.number().int().min(3).max(20).default(5),
+  ACCOUNT_LOCK_MINUTES: z.coerce.number().int().min(5).max(1440).default(15),
 });
 
 const result = schema.safeParse(process.env);

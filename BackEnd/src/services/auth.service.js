@@ -34,8 +34,19 @@ async function login(username, password) {
     // Comparación dummy para reducir diferencias temporales que faciliten enumeración de usuarios.
     const fallbackHash = '$2b$10$C6UzMDM.H6dfI/f/IKcEe.5Y8R6f0QqM6V7CqY2Y5nJzP9D1r7G7K';
     const validPassword = await bcrypt.compare(password, usuario?.password_hash || fallbackHash);
-    if (!usuario || !validPassword) return { success: false, code: 'INVALID_CREDENTIALS', error: 'Credenciales incorrectas' };
+    if (usuario?.bloqueado_hasta && usuario.bloqueado_hasta > new Date()) {
+      return { success: false, code: 'ACCOUNT_LOCKED', error: 'Cuenta temporalmente bloqueada por seguridad' };
+    }
+    if (!usuario || !validPassword) {
+      if (usuario) {
+        const attempts = usuario.intentos_fallidos + 1;
+        const lock = attempts >= env.MAX_LOGIN_FAILURES ? new Date(Date.now() + env.ACCOUNT_LOCK_MINUTES * 60_000) : null;
+        await prisma.usuario.update({ where: { id_usuario: usuario.id_usuario }, data: { intentos_fallidos: lock ? 0 : attempts, bloqueado_hasta: lock } });
+      }
+      return { success: false, code: 'INVALID_CREDENTIALS', error: 'Credenciales incorrectas' };
+    }
     if (usuario.estado !== 'ACTIVO') return { success: false, code: 'USER_INACTIVE', error: 'Cuenta inactiva. Contacte al administrador.' };
+    await prisma.usuario.update({ where: { id_usuario: usuario.id_usuario }, data: { intentos_fallidos: 0, bloqueado_hasta: null, ultimo_acceso: new Date() } });
 
     if (usuario.mfa_habilitado) {
       return { success: true, mfaRequired: true, challengeToken: mfaService.createChallenge(usuario) };

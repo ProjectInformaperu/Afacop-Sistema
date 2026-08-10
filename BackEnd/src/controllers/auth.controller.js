@@ -5,6 +5,7 @@ import * as mfaService from "../services/mfa.service.js";
 const ERROR_STATUS_MAP = {
   VALIDATION_ERROR: 400,
   INVALID_CREDENTIALS: 401,
+  ACCOUNT_LOCKED: 423,
   USER_INACTIVE: 403,
   USER_NOT_FOUND: 404,
   INTERNAL_ERROR: 500,

@@ -11,6 +11,7 @@ import WorkerDetail from './pages/WorkerDetail.jsx';
 import Rutas from './pages/Rutas.jsx';
 import Admision from './pages/Admision.jsx';
 import ControlAcceso from './pages/ControlAcceso.jsx';
+import Calidad from './pages/Calidad.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';
 import './index.css';
 import './App.css';
@@ -232,6 +233,7 @@ function ModuleRoutes() {
       <Route path="/admision"  element={<ProtectedRoute title="Admisión"   moduloKey="admision"><Admision /></ProtectedRoute>} />
       <Route path="/rutas"     element={<ProtectedRoute title="Rutas"      moduloKey="rutas"><Rutas /></ProtectedRoute>} />
       <Route path="/acceso"    element={<ProtectedRoute title="Control de Acceso" moduloKey="acceso"><ControlAcceso /></ProtectedRoute>} />
+      <Route path="/calidad"   element={<ProtectedRoute title="Calidad ISO 9001" moduloKey="calidad"><Calidad /></ProtectedRoute>} />
       <Route path="*"          element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
