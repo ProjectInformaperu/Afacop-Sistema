@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Mi Radar 360",
+    "slug": "mi-radar-360",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "radar360",
+    "ios": { "supportsTablet": true },
+    "android": {
+      "package": "pe.informaperu.radar360",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "INTERNET"],
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": { "favicon": "./assets/favicon.png" },
+    "plugins": [
+      "expo-secure-store",
+      ["expo-location", { "locationWhenInUsePermission": "Mi Radar usa tu ubicación para gestionar rutas y visitas en campo." }]
+    ]
+  }
+}

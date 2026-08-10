@@ -1,0 +1,4 @@
+const API_URL=(process.env.EXPO_PUBLIC_API_URL||'http://10.0.2.2:4001').replace(/\/$/,'');
+export class ApiError extends Error{status:number;data:any;constructor(status:number,data:any){super(data?.error||data?.mensaje||'No se pudo completar la solicitud');this.status=status;this.data=data;}}
+export async function request<T>(path:string,options:RequestInit={},token?:string|null):Promise<T>{const response=await fetch(`${API_URL}${path}`,{...options,headers:{'Content-Type':'application/json',Accept:'application/json','x-sede-id':'11111111-1111-1111-1111-000000000001',...(token?{Authorization:`Bearer ${token}`} :{}),...(options.headers||{})}});const type=response.headers.get('content-type')||'';const data=type.includes('application/json')?await response.json():await response.text();if(!response.ok)throw new ApiError(response.status,data);return data as T;}
+export{API_URL};
