@@ -1,0 +1,66 @@
+services:
+  - type: web
+    name: afacop-radar360-backend
+    runtime: node
+    rootDir: BackEnd
+    plan: starter
+    region: ohio
+    buildCommand: npm ci && npm run build
+    preDeployCommand: npm run deploy:prepare
+    startCommand: npm start
+    healthCheckPath: /health/ready
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: GEOCODING_BASE_URL
+        value: https://nominatim.openstreetmap.org
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MFA_ENCRYPTION_KEY
+        generateValue: true
+      - key: INITIAL_ADMIN_USERNAME
+        value: admin
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false
+      - key: REQUIRE_MFA
+        value: "true"
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_ISSUER
+        value: radar-360-api
+      - key: JWT_AUDIENCE
+        value: radar-360-clients
+      - key: FRONTEND_URL
+        value: https://afacop-radar360-frontend.onrender.com
+      - key: CORS_ALLOW_ALL
+        value: "false"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: LOG_LEVEL
+        value: info
+      - key: MAX_LOGIN_FAILURES
+        value: "5"
+      - key: ACCOUNT_LOCK_MINUTES
+        value: "15"
+
+  - type: web
+    name: afacop-radar360-frontend
+    runtime: static
+    rootDir: FrontEnd
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: VITE_API_URL
+        value: https://afacop-radar360-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

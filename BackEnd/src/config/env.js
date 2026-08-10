@@ -25,6 +25,7 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatorio'),
+  GEOCODING_BASE_URL: z.string().url('GEOCODING_BASE_URL debe ser una URL valida').default('https://nominatim.openstreetmap.org'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET debe tener al menos 32 caracteres'),
   MFA_ENCRYPTION_KEY: z.string().min(32, 'MFA_ENCRYPTION_KEY debe tener al menos 32 caracteres'),
   REQUIRE_MFA: z.enum(['true', 'false']).default('false'),

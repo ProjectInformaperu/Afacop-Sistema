@@ -4,7 +4,14 @@
   "type": "module",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
+    "build": "prisma generate",
+    "db:deploy": "prisma migrate deploy",
+    "admin:bootstrap": "node scripts/bootstrap-admin.js",
+    "deploy:prepare": "npm run db:deploy && npm run admin:bootstrap",
     "dev": "node src/server.js",
     "start": "node src/server.js",
     "test": "node --test tests/*.test.js",

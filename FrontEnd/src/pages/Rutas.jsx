@@ -115,9 +115,18 @@ const ClientMarker = React.memo(({ client, isSelected, selectedIndex, onClick })
 
 const ESTADO_CONFIG = {
   PROGRAMADA: { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: 'Programada' },
-  EN_PROCESO: { color: '#10b981', bg: 'rgba(16,185,129,0.12)', label: 'En proceso' },
-  FINALIZADA: { color: '#2563eb', bg: 'rgba(37,99,235,0.12)', label: 'Finalizada' },
+  EN_PROCESO: { color: '#2563eb', bg: 'rgba(37,99,235,0.12)', label: 'En proceso' },
+  FINALIZADA: { color: '#10b981', bg: 'rgba(16,185,129,0.12)', label: 'Finalizada' },
   CANCELADA:  { color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  label: 'Cancelada' },
+};
+
+const CLIENTE_ESTADO_CONFIG = {
+  PENDIENTE: { color: '#64748b', bg: 'rgba(100,116,139,0.12)' },
+  VISITADO: { color: '#059669', bg: 'rgba(16,185,129,0.14)' },
+  GESTIONADO: { color: '#059669', bg: 'rgba(16,185,129,0.14)' },
+  GESTIONADO_PAGO: { color: '#059669', bg: 'rgba(16,185,129,0.14)' },
+  REPROGRAMADO: { color: '#d97706', bg: 'rgba(245,158,11,0.16)' },
+  NO_ENCONTRADO: { color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
 };
 
 const RouteCard = ({ route, onEdit, onDelete, onStatusChange, onClientStatusChange }) => {
@@ -214,7 +223,10 @@ const RouteCard = ({ route, onEdit, onDelete, onStatusChange, onClientStatusChan
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Clientes en ruta</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {clientesToShow.map((rc, i) => (
+              {clientesToShow.map((rc, i) => {
+                const estadoCliente = (rc.estado_visita || 'PENDIENTE').toUpperCase();
+                const estadoClienteCfg = CLIENTE_ESTADO_CONFIG[estadoCliente] || CLIENTE_ESTADO_CONFIG.PENDIENTE;
+                return (
                 <div key={rc.id_ruta_cliente} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '8px 12px', borderRadius: 8,
@@ -238,7 +250,11 @@ const RouteCard = ({ route, onEdit, onDelete, onStatusChange, onClientStatusChan
                       aria-label={`Resultado de ${rc.cliente?.nombres || 'cliente'}`}
                       value={rc.estado_visita || 'PENDIENTE'}
                       onChange={event => onClientStatusChange(route.id_ruta, rc.id_cliente, event.target.value)}
-                      style={{ width: '165px', minWidth: '150px', height: '34px', padding: '5px 34px 5px 10px', fontSize: '11px' }}
+                      style={{
+                        width: '165px', minWidth: '150px', height: '34px', padding: '5px 34px 5px 10px', fontSize: '11px',
+                        color: estadoClienteCfg.color, backgroundColor: estadoClienteCfg.bg,
+                        borderColor: `${estadoClienteCfg.color}55`, fontWeight: 700
+                      }}
                     >
                       <option value="PENDIENTE">Pendiente</option>
                       <option value="VISITADO">Visitado</option>
@@ -246,12 +262,16 @@ const RouteCard = ({ route, onEdit, onDelete, onStatusChange, onClientStatusChan
                       <option value="REPROGRAMADO">Reprogramado</option>
                     </select>
                   ) : (
-                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-muted)', background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 99, padding: '4px 8px' }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 800, color: estadoClienteCfg.color,
+                      background: estadoClienteCfg.bg, border: `1px solid ${estadoClienteCfg.color}40`,
+                      borderRadius: 99, padding: '4px 8px'
+                    }}>
                       {(rc.estado_visita || 'PENDIENTE').replace(/_/g, ' ')}
                     </span>
                   )}
                 </div>
-              ))}
+              )})}
             </div>
             {extra > 0 && (
               <button onClick={() => setShowAll(!showAll)} style={{

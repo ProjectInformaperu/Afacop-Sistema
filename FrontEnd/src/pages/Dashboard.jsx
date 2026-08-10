@@ -24,7 +24,7 @@ const estadoMeta = {
   VISITADO: { color: '#10B981', bg: 'rgba(16,185,129,0.08)', Icon: CheckCircle, label: 'Visitados' },
   LIBRE: { color: '#28A745', bg: 'rgba(40,167,69,0.08)', Icon: CheckCircle, label: 'Libre' },
   VISITADO_PAGO: { color: '#007BFF', bg: 'rgba(0,123,255,0.08)', Icon: Wallet, label: 'Visitado / Pago' },
-  REPROGRAMADO: { color: '#7C3AED', bg: 'rgba(124,58,237,0.08)', Icon: RefreshCw, label: 'Reprogramados' },
+  REPROGRAMADO: { color: '#F59E0B', bg: 'rgba(245,158,11,0.10)', Icon: RefreshCw, label: 'Reprogramados' },
   NO_ENCONTRADO: { color: '#DC3545', bg: 'rgba(220,53,69,0.08)', Icon: AlertCircle, label: 'No encontrado' },
   NO_ECONTRADO: { color: '#DC3545', bg: 'rgba(220,53,69,0.08)', Icon: AlertCircle, label: 'No encontrado' },
   DEFAULT: { color: '#FFC107', bg: 'rgba(255,193,7,0.08)', Icon: Calendar, label: 'Pendiente' },
@@ -279,10 +279,13 @@ export default function Dashboard() {
                       </p>
                     </div>
                   ) : pageItems.map((a, idx) => {
+                    const activityStatus = String(a.tipificacion || '').trim().toUpperCase();
                     let flagColor = '#6C757D';
-                    if (a.tipificacion === 'NO_ENCONTRADO') flagColor = '#EF4444';
-                    else if (a.tipificacion === 'PAGO') flagColor = '#28A745';
-                    else if (a.tipificacion === 'REPROGRAMARA') flagColor = '#FFC107';
+                    if (activityStatus === 'NO_ENCONTRADO' || activityStatus === 'NO_ECONTRADO') flagColor = '#EF4444';
+                    else if (['PAGO', 'GESTIONADO', 'VISITADO', 'RUTA_FINALIZADA'].includes(activityStatus)) flagColor = '#28A745';
+                    else if (activityStatus === 'REPROGRAMADO' || activityStatus === 'REPROGRAMARA') flagColor = '#F59E0B';
+                    else if (activityStatus === 'RUTA_INICIADA') flagColor = '#2563EB';
+                    else if (activityStatus === 'RUTA_CANCELADA') flagColor = '#DC3545';
                     return (
                       <div key={a.id || idx} style={{ ...S.actItem, borderBottom: '1px solid #E5E7EB', paddingBottom: '12px', marginBottom: '12px', position: 'relative' }}>
                         <div style={S.actAvatar}>

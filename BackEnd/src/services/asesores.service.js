@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { env } from "../config/env.js";
 
 const geocodeCache = new Map();
 let lastGeocodeRequest = 0;
@@ -58,7 +59,7 @@ async function geocodificarUbicacion(latitud, longitud) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
   try {
-    const baseUrl = process.env.GEOCODING_BASE_URL || 'https://nominatim.openstreetmap.org';
+    const baseUrl = env.GEOCODING_BASE_URL;
     const url = new URL('/reverse', baseUrl);
     url.search = new URLSearchParams({
       format: 'geocodejson', lat: String(latitud), lon: String(longitud),
