@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;700;800&display=swap');
+
+@font-face {
+  font-family: 'Serimi';
+  src: url('./assets/tipografia/SERIMI.ttf') format('truetype');
+}
+
+/* ─── Tokens (SaaS Bento Dark Theme) ───────────────────────── */
+/* Anti-Scraping Obfuscation Mode */
+body.obfuscate-mode .page-content {
+  filter: blur(8px);
+  user-select: none;
+  pointer-events: none;
+  transition: filter 0.3s ease;
+}
+
+body.obfuscate-mode .page-content::after {
+  content: "ACCESO BLOQUEADO POR SEGURIDAD";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: 900;
+  color: #EF4444;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  z-index: 999999;
+}
+
+:root {
+  /* ─── TEMA FIJO PREDETERMINADO ─────────────────────────────────────────── */
+  /* Estos valores coinciden exactamente con FIXED_THEME_VARS en AuthContext  */
+  --c-bg:          #F5F7FB; /* Fondo general: blanco azulado muy suave          */
+  --c-surface:     #FFFFFF; /* Cards y modales                                  */
+  --c-surface-2:   #F8F9FA; /* Inputs, filas alternas, hovers                   */
+  --c-border:      #DEE2E6; /* Bordes suaves gris claro                         */
+  --c-sidebar-bg:  #0B22A1; /* Sidebar azul                                     */
+  --c-sidebar-text:#FFFFFF; /* Texto sidebar                                    */
+  --c-primary:     #0B22A1; /* Azul principal                                   */
+  --c-primary-h:   #233CC4; /* Azul principal hover                             */
+  --c-primary-rgb: 11, 34, 161; /* RGB de azul principal                        */
+  --c-on-primary:  #FFFFFF; /* Texto sobre primario                              */
+  --c-text:        #212529; /* Texto principal oscuro                            */
+  --c-muted:       #6C757D; /* Texto secundario                                 */
+  --c-muted-2:     #9CA3AF; /* Texto terciario / placeholder                    */
+
+  /* ─── Colores semánticos (no cambian con el tema) ──────────────────── */
+  --c-warn:        #FFC107; /* Amarillo mostaza                                  */
+  --c-danger:      #DC3545; /* Rojo suave                                        */
+  --c-success:     #28A745; /* Verde suave                                       */
+  --c-info:        #17a2b8; /* Cyan info                                         */
+  --c-accent-teal: #28A745;
+  --c-accent-pink: #DC3545;
+  --c-accent-purple:#845EF7;
+  --c-accent-cyan: #22B8CF;
+  --c-hover-purple:rgba(2, 123, 253, 0.08);
+
+  /* ─── Radios, sombras, transiciones ────────────────────────────── */
+  --radius-sm:  4px;
+  --radius:     4px;
+  --radius-lg:  4px;
+  --radius-xl:  4px;
+  --shadow:     0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-lg:  0 4px 12px rgba(0, 0, 0, 0.06);
+  --transition: 0.20s ease-out;
+  --font-main:  'Inter', sans-serif;
+  --logo-filter:none;
+  --sidebar-w:  clamp(220px, 18vw, 280px);
+  --topbar-h:   clamp(62px, 5vw, 80px);
+  --page-gutter: clamp(12px, 2.2vw, 32px);
+  --section-gap: clamp(12px, 1.5vw, 24px);
+}
+
+/* Force dark theme */
+[data-theme="light"],
+[data-theme="dark"] {
+  /* Keep it dark as requested */
+}
+
+/* ─── Reset ──────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', var(--font-main);
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base64 SVG Noise Overlay to match the design */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Subtle Orb Glow */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(circle at 80% -10%, rgba(66, 99, 235, 0.08) 0%, transparent 60%);
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--c-text);
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+}
+
+/* Ensure all interactive elements use the theme font */
+input,
+select,
+textarea,
+button,
+label {
+  font-family: var(--font-main);
+  color: var(--c-text);
+}
+
+.font-bold {
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+/* Ensure all cards have proper text color */
+.card,
+.modal,
+.card h1,
+.card h2,
+.card h3,
+.card h4,
+.card label {
+  color: var(--c-text) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background-color: var(--c-surface) !important;
+  color: var(--c-text) !important;
+  border: 1px solid var(--c-border) !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.leaflet-popup-content {
+  color: var(--c-text) !important;
+  font-family: var(--font-main) !important;
+  margin: 15px !important;
+  line-height: 1.5;
+}
+
+.leaflet-container {
+  background-color: var(--c-surface-2) !important;
+}
+
+.sidebar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.avatar-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+}
