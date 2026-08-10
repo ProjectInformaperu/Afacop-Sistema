@@ -1,0 +1,239 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Prisma 7 — La URL de conexión se gestiona desde prisma.config.ts
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Tabla física: clientes
+model Cliente {
+  id_cliente       Int       @id @default(autoincrement())
+  dni              String    @unique @db.VarChar(20)
+  telefono         String?   @db.VarChar(20)
+  nombres          String    @db.VarChar(150)
+  apellido_paterno String    @db.VarChar(100)
+  apellido_materno String    @db.VarChar(100)
+  direccion        String?   @db.VarChar(255)
+  distrito         String?   @db.VarChar(100)
+  deuda_castigada  Decimal   @default(0) @db.Decimal(12, 2)
+  deuda_vigente    Decimal   @default(0) @db.Decimal(12, 2)
+  otras_deudas     Decimal   @default(0) @db.Decimal(12, 2)
+  estado           String    @default("ACTIVO") @db.VarChar(20)
+  ultima_gestion   DateTime?
+  latitud          Decimal?  @db.Decimal(10, 8)
+  longitud         Decimal?  @db.Decimal(11, 8)
+
+  // Relación 1:N → Un cliente puede tener muchas admisiones
+  admisiones Admision[]
+
+  // Relaciones del módulo cobranzas
+  asignaciones   AsignacionCliente[]
+  rutas_clientes RutaCliente[]
+  visitas        Visita[]
+
+  @@index([latitud, longitud])
+  @@map("clientes")
+}
+
+/// Tabla física: admisiones
+model Admision {
+  id_admision   Int       @id @default(autoincrement())
+  id_cliente    Int
+  producto      String?   @db.VarChar(150)
+  linea_credito Decimal?  @db.Decimal(12, 2)
+  estado        String    @default("PENDIENTE") @db.VarChar(30)
+  fecha         DateTime?
+
+  // Relación N:1 → Cada admisión pertenece a un solo cliente
+  cliente Cliente @relation(fields: [id_cliente], references: [id_cliente], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([id_cliente])
+  @@map("admisiones")
+}
+
+/// Tabla física: asesores
+model Asesor {
+  id_asesor        Int      @id @default(autoincrement())
+  dni              String   @unique @db.VarChar(20)
+  nombres          String   @db.VarChar(150)
+  apellido_paterno String   @db.VarChar(100)
+  apellido_materno String   @db.VarChar(100)
+  telefono         String?  @db.VarChar(20)
+  correo           String?  @db.VarChar(150)
+  distrito         String?  @db.VarChar(100)
+  estado           String   @default("ACTIVO") @db.VarChar(20)
+  latitud          Decimal? @db.Decimal(10, 8)
+  longitud         Decimal? @db.Decimal(11, 8)
+  fecha_creacion   DateTime @default(now())
+  fecha_actualizar DateTime @updatedAt
+
+  // Relaciones
+  asignaciones AsignacionCliente[]
+  rutas        Ruta[]
+  visitas      Visita[]
+  usuario      Usuario?
+
+  @@map("asesores")
+}
+
+/// Tabla física: asignaciones_clientes
+model AsignacionCliente {
+  id_asignacion    Int       @id @default(autoincrement())
+  id_cliente       Int
+  id_asesor        Int
+  fecha_asignacion DateTime  @default(now())
+  fecha_fin        DateTime?
+  estado           String    @default("ACTIVA") @db.VarChar(20) // ACTIVA, FINALIZADA, CANCELADA
+
+  // Relaciones (Protección de integridad con Restrict)
+  cliente Cliente @relation(fields: [id_cliente], references: [id_cliente], onDelete: Restrict, onUpdate: Cascade)
+  asesor  Asesor  @relation(fields: [id_asesor], references: [id_asesor], onDelete: Restrict, onUpdate: Cascade)
+
+  // Índices para optimización de búsquedas e historial
+  @@index([id_asesor])
+  @@index([id_cliente])
+  @@map("asignaciones_clientes")
+}
+
+/// Tabla física: rutas
+model Ruta {
+  id_ruta           Int           @id @default(autoincrement())
+  id_asesor         Int
+  fecha_programada  DateTime
+  fecha_inicio_real DateTime?
+  fecha_fin_real    DateTime?
+  estado            String        @default("PROGRAMADA") @db.VarChar(20) // PROGRAMADA, EN_PROCESO, FINALIZADA, CANCELADA
+  fecha_creacion    DateTime      @default(now())
+  fecha_actualizar  DateTime      @updatedAt
+
+  // Relaciones (Protección de integridad con Restrict)
+  asesor            Asesor        @relation(fields: [id_asesor], references: [id_asesor], onDelete: Restrict, onUpdate: Cascade)
+  rutas_clientes    RutaCliente[]
+
+  // Índices para optimización de búsquedas y desempeño diario
+  @@index([id_asesor, fecha_programada])
+  @@index([fecha_programada])
+  @@map("rutas")
+}
+
+/// Tabla física: rutas_clientes (tabla intermedia de detalle de visitas programadas)
+model RutaCliente {
+  id_ruta_cliente  Int      @id @default(autoincrement())
+  id_ruta          Int
+  id_cliente       Int
+  secuencia        Int      @default(0) // Orden sugerido de visita
+  estado_visita    String   @default("PENDIENTE") @db.VarChar(20) // PENDIENTE, VISITADO, NO_ENCONTRADO, REPROGRAMADO
+  prioridad        String   @default("MEDIA") @db.VarChar(20) // ALTA, MEDIA, BAJA (preparado para optimización de rutas)
+  fecha_creacion   DateTime @default(now())
+  fecha_actualizar DateTime @updatedAt
+
+  // Relaciones (Protección de integridad con Restrict)
+  ruta             Ruta     @relation(fields: [id_ruta], references: [id_ruta], onDelete: Restrict, onUpdate: Cascade)
+  cliente          Cliente  @relation(fields: [id_cliente], references: [id_cliente], onDelete: Restrict, onUpdate: Cascade)
+  visitas          Visita[]
+
+  // Unicidad para evitar duplicados en la misma ruta y optimización de índices
+  @@unique([id_ruta, id_cliente])
+  @@index([id_cliente])
+  @@map("rutas_clientes")
+}
+
+/// Tabla física: visitas (registro de ejecución real y gestión en campo)
+model Visita {
+  id_visita          Int       @id @default(autoincrement())
+  id_ruta_cliente    Int?      // Nullable para permitir visitas excepcionales/fuera de ruta
+  id_cliente         Int
+  id_asesor          Int
+  tipo_visita        String    @default("PROGRAMADA") @db.VarChar(20) // PROGRAMADA, EXTRAORDINARIA
+  fecha_hora_checkin DateTime
+  fecha_hora_checkout DateTime? // Nullable para escenarios de fallo en app móvil o cierre inesperado
+  latitud            Decimal   @db.Decimal(10, 8)
+  longitud           Decimal   @db.Decimal(11, 8)
+  resultado          String    @db.VarChar(50)
+  es_efectiva        Boolean   @default(false)
+  monto_recaudado    Decimal?  @db.Decimal(12, 2)
+  fecha_promesa      DateTime?
+  observaciones      String?   @db.Text
+  foto_url           String?   @db.VarChar(255) // Evidencia (referencia a almacenamiento externo)
+  fecha_creacion     DateTime  @default(now())
+  fecha_actualizar   DateTime  @updatedAt
+
+  // Relaciones con protección Restrict
+  ruta_cliente RutaCliente? @relation(fields: [id_ruta_cliente], references: [id_ruta_cliente], onDelete: Restrict, onUpdate: Cascade)
+  cliente      Cliente      @relation(fields: [id_cliente], references: [id_cliente], onDelete: Restrict, onUpdate: Cascade)
+  asesor       Asesor       @relation(fields: [id_asesor], references: [id_asesor], onDelete: Restrict, onUpdate: Cascade)
+
+  // Índices para optimización de reportes e histórico
+  @@index([id_ruta_cliente])
+  @@index([id_cliente])
+  @@index([id_asesor, fecha_hora_checkin])
+@@map("visitas")
+}
+
+/// Tabla física: usuarios
+model Usuario {
+  id_usuario     String   @id @default(uuid()) @db.Uuid
+  username       String   @unique @db.VarChar(50)
+  password_hash  String   @db.Text
+  rol            String   @db.VarChar(20) // ADMIN, WORKER
+  estado         String   @default("ACTIVO") @db.VarChar(20) // ACTIVO, INACTIVO
+  id_asesor      Int?     @unique
+  fecha_creacion DateTime @default(now()) @db.Timestamptz
+  mfa_habilitado Boolean  @default(false)
+  mfa_secreto    String?  @db.Text
+  mfa_ultimo_uso DateTime? @db.Timestamptz
+  token_version  Int       @default(0)
+
+  // Relación opcional al registro de Asesor
+  asesor         Asesor?  @relation(fields: [id_asesor], references: [id_asesor], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("usuarios")
+}
+
+model AuditoriaSeguridad {
+  id_auditoria String   @id @default(uuid()) @db.Uuid
+  fecha        DateTime @default(now()) @db.Timestamptz
+  request_id   String?  @db.VarChar(100)
+  actor_id     String?  @db.Uuid
+  actor        String?  @db.VarChar(50)
+  rol          String?  @db.VarChar(30)
+  metodo       String   @db.VarChar(10)
+  ruta         String   @db.VarChar(255)
+  estado_http  Int
+  ip_hash      String?  @db.VarChar(64)
+  user_agent   String?  @db.VarChar(255)
+
+  @@index([fecha])
+  @@index([actor_id, fecha])
+  @@map("auditoria_seguridad")
+}
+
+model ImportacionMasiva {
+  id_importacion String   @id @default(uuid()) @db.Uuid
+  tipo           String   @db.VarChar(30)
+  estado         String   @default("PENDIENTE") @db.VarChar(20)
+  archivo        String   @db.VarChar(255)
+  ruta_temporal  String   @db.Text
+  actor_id       String?  @db.Uuid
+  total_filas    Int      @default(0)
+  procesadas     Int      @default(0)
+  insertadas     Int      @default(0)
+  actualizadas   Int      @default(0)
+  omitidas       Int      @default(0)
+  errores        Int      @default(0)
+  detalle_error  Json?
+  fecha_creacion DateTime @default(now()) @db.Timestamptz
+  fecha_inicio   DateTime? @db.Timestamptz
+  fecha_fin      DateTime? @db.Timestamptz
+
+  @@index([estado, fecha_creacion])
+  @@index([actor_id, fecha_creacion])
+  @@map("importaciones_masivas")
+}

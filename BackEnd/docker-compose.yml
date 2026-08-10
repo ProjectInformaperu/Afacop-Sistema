@@ -1,0 +1,41 @@
+# =====================================================================
+# Docker Compose — Radar 360 Backend
+# =====================================================================
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: radar360_postgres
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:5432"
+
+    shm_size: 256mb
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    volumes:
+      - radar360_pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  radar360_pgdata:
+    name: radar360_pgdata

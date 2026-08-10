@@ -1,0 +1,30 @@
+name: Security controls
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  backend-security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          JWT_SECRET: ci-only-jwt-secret-with-more-than-32-characters
+          MFA_ENCRYPTION_KEY: ci-only-independent-mfa-key-more-than-32-characters
+      - run: npm audit --omit=dev --audit-level=high
