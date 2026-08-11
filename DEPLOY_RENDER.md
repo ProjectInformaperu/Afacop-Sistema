@@ -10,7 +10,7 @@ El archivo `render.yaml` despliega el backend y el frontend como un Blueprint.
 4. Crear los dos servicios. Render generará automáticamente `JWT_SECRET` y `MFA_ENCRYPTION_KEY`.
 5. Esperar a que el pre-deploy aplique las migraciones Prisma y verificar:
    - Backend: `https://afacop-radar360-backend.onrender.com/health/ready`
-   - Frontend: `https://afacop-radar360-frontend.onrender.com`
+   - Frontend: `https://afacop-frontend.onrender.com`
 
 El primer acceso usa el usuario `admin` y la contraseña secreta configurada en `INITIAL_ADMIN_PASSWORD`. Si la base ya contiene un administrador, el bootstrap no crea ni modifica cuentas. Con MFA obligatorio, el primer inicio solicitará vincular Google Authenticator o cualquier aplicación TOTP compatible.
 

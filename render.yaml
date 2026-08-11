@@ -36,7 +36,7 @@ services:
       - key: JWT_AUDIENCE
         value: radar-360-clients
       - key: FRONTEND_URL
-        value: https://afacop-radar360-frontend.onrender.com
+        value: https://afacop-frontend.onrender.com
       - key: CORS_ALLOW_ALL
         value: "false"
       - key: TRUST_PROXY
@@ -49,7 +49,7 @@ services:
         value: "15"
 
   - type: web
-    name: afacop-radar360-frontend
+    name: afacop-frontend
     runtime: static
     rootDir: FrontEnd
     buildCommand: npm ci && npm run build
