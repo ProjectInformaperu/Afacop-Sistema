@@ -27,6 +27,8 @@ services:
         value: admin
       - key: INITIAL_ADMIN_PASSWORD
         sync: false
+      - key: RESET_INITIAL_ADMIN
+        value: "false"
       - key: REQUIRE_MFA
         value: "true"
       - key: JWT_EXPIRES_IN
