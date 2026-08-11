@@ -111,6 +111,8 @@ test('la excepción MFA de Afacop es nominativa y no desactiva MFA por rol', () 
   assert.match(auth, /if \(usuario\.mfa_habilitado\)/);
   assert.match(auth, /usuario\.mfa_requerido/);
   assert.match(blueprint, /MFA_EXEMPT_USERNAMES[\s\S]*value: Afacop/);
+  const envSource = fs.readFileSync(path.resolve('src/config/env.js'), 'utf8');
+  assert.match(envSource, /env\.INITIAL_ADMIN_USERNAME/);
 });
 
 test('el cifrado autenticado de secretos MFA permite recuperar el valor íntegro', async () => {

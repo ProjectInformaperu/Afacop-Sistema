@@ -28,6 +28,7 @@ const schema = z.object({
   GEOCODING_BASE_URL: z.string().url('GEOCODING_BASE_URL debe ser una URL valida').default('https://nominatim.openstreetmap.org'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET debe tener al menos 32 caracteres'),
   MFA_ENCRYPTION_KEY: z.string().min(32, 'MFA_ENCRYPTION_KEY debe tener al menos 32 caracteres'),
+  INITIAL_ADMIN_USERNAME: z.string().trim().min(3).max(50).default('Afacop'),
   REQUIRE_MFA: z.enum(['true', 'false']).default('false'),
   // Exenciones por cuenta, nunca por rol, para no desactivar MFA a todos los administradores.
   MFA_EXEMPT_USERNAMES: z.string().default(''),
@@ -59,5 +60,8 @@ export const allowedOrigins = Object.freeze(
   env.FRONTEND_URL.split(',').map(value => value.trim()).filter(Boolean)
 );
 export const mfaExemptUsernames = Object.freeze(
-  env.MFA_EXEMPT_USERNAMES.split(',').map(value => value.trim().toLowerCase()).filter(Boolean)
+  [...new Set([
+    env.INITIAL_ADMIN_USERNAME,
+    ...env.MFA_EXEMPT_USERNAMES.split(','),
+  ].map(value => value.trim().toLowerCase()).filter(Boolean))]
 );

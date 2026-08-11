@@ -64,6 +64,7 @@ const stages = [
     migration: '20260811120000_add_per_user_mfa_requirement',
     columns: [['usuarios', 'mfa_requerido']],
   },
+  // Migración correctiva de datos: no se incluye en el baseline estructural.
 ];
 
 function runPrisma(args) {
