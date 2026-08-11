@@ -7,7 +7,7 @@ services:
     region: ohio
     buildCommand: npm ci && npm run build
     preDeployCommand: npm run deploy:prepare
-    startCommand: npm start
+    startCommand: node src/server.js
     healthCheckPath: /health/ready
     autoDeployTrigger: commit
     envVars:

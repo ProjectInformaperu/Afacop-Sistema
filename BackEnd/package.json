@@ -5,15 +5,16 @@
   "description": "",
   "main": "index.js",
   "engines": {
-    "node": ">=24.0.0"
+    "node": "24.19.x"
   },
   "scripts": {
     "build": "prisma generate",
+    "postinstall": "prisma generate",
     "db:deploy": "prisma migrate deploy",
     "admin:bootstrap": "node scripts/bootstrap-admin.js",
     "deploy:prepare": "npm run db:deploy && npm run admin:bootstrap",
     "dev": "node src/server.js",
-    "start": "node src/server.js",
+    "start": "npm run deploy:prepare && node src/server.js",
     "test": "node --test tests/*.test.js",
     "security:audit": "npm audit --omit=dev",
     "check": "node --check src/server.js"
@@ -45,12 +46,11 @@
     "pg": "^8.22.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
+    "prisma": "^7.8.0",
     "socket.io": "^4.8.3",
     "zod": "^4.4.3"
   },
-  "devDependencies": {
-    "prisma": "^7.8.0"
-  },
+  "devDependencies": {},
   "overrides": {
     "uuid": "^11.1.1"
   }
