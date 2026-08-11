@@ -40,6 +40,7 @@ const FIXED_THEME_VARS = {
 };
 
 const DEFAULT_SEDE = { id: "11111111-1111-1111-1111-000000000001", nombre: "Lima" };
+const PRODUCTION_API_URL = "https://afacop-backend.onrender.com";
 
 function getApiUrl() {
   if (typeof window !== "undefined" && window.location.hostname.endsWith('.devtunnels.ms')) {
@@ -48,6 +49,9 @@ function getApiUrl() {
     const backendHost = window.location.hostname.replace(/-5173(?=\.)/, '-4001');
     return `https://${backendHost}`;
   }
+  // Los builds desplegados usan un unico endpoint verificado. Esto impide que
+  // una variable antigua del panel de Render vuelva a dirigir el login a otro servicio.
+  if (import.meta.env.PROD) return PRODUCTION_API_URL;
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL.replace(/\/$/, "");
   if (typeof window === "undefined") return "http://localhost:4000";
   return `http://${window.location.hostname}:4000`;
