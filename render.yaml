@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: afacop-radar360-backend
+    name: afacop-backend
     runtime: node
     rootDir: BackEnd
     plan: starter
@@ -59,7 +59,7 @@ services:
       - key: NODE_VERSION
         value: 24.19.0
       - key: VITE_API_URL
-        value: https://afacop-radar360-backend.onrender.com
+        value: https://afacop-backend.onrender.com
     routes:
       - type: rewrite
         source: /*
