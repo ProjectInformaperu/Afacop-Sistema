@@ -14,6 +14,8 @@ El archivo `render.yaml` despliega el backend y el frontend como un Blueprint.
 
 El primer acceso usa el usuario `admin` y la contraseña secreta configurada en `INITIAL_ADMIN_PASSWORD`. Si la base ya contiene un administrador, el bootstrap no crea ni modifica cuentas. Con MFA obligatorio, el primer inicio solicitará vincular Google Authenticator o cualquier aplicación TOTP compatible.
 
+Si PostgreSQL ya contiene el esquema pero todavía no tiene historial de Prisma, el despliegue valida tablas, columnas e índices críticos y registra automáticamente el baseline sin eliminar ni reemplazar datos. Si la estructura no es compatible, el despliegue se detiene de forma segura e informa los elementos faltantes.
+
 ## Si Render cambia los nombres o dominios
 
 - En el backend actualizar `FRONTEND_URL` con la URL HTTPS exacta del frontend, sin `/` al final.

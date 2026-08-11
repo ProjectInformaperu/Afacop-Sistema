@@ -10,7 +10,7 @@
   "scripts": {
     "build": "prisma generate",
     "postinstall": "prisma generate",
-    "db:deploy": "prisma migrate deploy",
+    "db:deploy": "node scripts/deploy-migrations.js",
     "admin:bootstrap": "node scripts/bootstrap-admin.js",
     "deploy:prepare": "npm run db:deploy && npm run admin:bootstrap",
     "dev": "node src/server.js",
