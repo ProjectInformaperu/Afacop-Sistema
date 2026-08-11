@@ -74,7 +74,7 @@ export async function confirm(userId, code) {
   if (!usuario?.mfa_secreto) throw Object.assign(new Error('Primero debe iniciar la configuración MFA'), { statusCode: 409 });
   const result = await verify({ secret: decryptSecret(usuario.mfa_secreto), token: code, epochTolerance: 30 });
   if (!result.valid) throw Object.assign(new Error('Código de verificación inválido'), { statusCode: 400 });
-  await prisma.usuario.update({ where: { id_usuario: userId }, data: { mfa_habilitado: true, mfa_ultimo_uso: new Date(result.epoch * 1000) } });
+  await prisma.usuario.update({ where: { id_usuario: userId }, data: { mfa_requerido: true, mfa_habilitado: true, mfa_ultimo_uso: new Date(result.epoch * 1000) } });
 }
 
 export async function disable(userId, password) {
@@ -82,5 +82,5 @@ export async function disable(userId, password) {
   if (!usuario || !(await bcrypt.compare(password, usuario.password_hash))) {
     throw Object.assign(new Error('Contraseña incorrecta'), { statusCode: 401 });
   }
-  await prisma.usuario.update({ where: { id_usuario: userId }, data: { mfa_habilitado: false, mfa_secreto: null, mfa_ultimo_uso: null } });
+  await prisma.usuario.update({ where: { id_usuario: userId }, data: { mfa_requerido: false, mfa_habilitado: false, mfa_secreto: null, mfa_ultimo_uso: null } });
 }

@@ -60,6 +60,10 @@ const stages = [
     ],
     indexes: ['usuarios_bloqueado_hasta_idx'],
   },
+  {
+    migration: '20260811120000_add_per_user_mfa_requirement',
+    columns: [['usuarios', 'mfa_requerido']],
+  },
 ];
 
 function runPrisma(args) {

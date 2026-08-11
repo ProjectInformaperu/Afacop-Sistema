@@ -187,6 +187,7 @@ model Usuario {
   id_asesor         Int?      @unique
   fecha_creacion    DateTime  @default(now()) @db.Timestamptz
   mfa_habilitado    Boolean   @default(false)
+  mfa_requerido     Boolean   @default(false)
   mfa_secreto       String?   @db.Text
   mfa_ultimo_uso    DateTime? @db.Timestamptz
   token_version     Int       @default(0)

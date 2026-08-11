@@ -1,7 +1,10 @@
 import bcrypt from 'bcryptjs';
 import prisma from '../src/config/prisma.js';
 
-const username = (process.env.INITIAL_ADMIN_USERNAME || 'admin').trim().toLowerCase();
+// El nombre de acceso y el rol son conceptos distintos. El usuario inicial es
+// "Afacop" (persistido en minúsculas para que el inicio de sesión no distinga
+// mayúsculas), mientras que sus permisos pertenecen al rol ADMINISTRADOR.
+const username = (process.env.INITIAL_ADMIN_USERNAME || 'Afacop').trim().toLowerCase();
 const password = process.env.INITIAL_ADMIN_PASSWORD || '';
 const resetRequested = process.env.RESET_INITIAL_ADMIN === 'true';
 
@@ -23,10 +26,11 @@ function validateCredentials() {
 try {
   const existingAdmin = await prisma.usuario.findFirst({
     where: { rol: { in: ['ADMINISTRADOR', 'ADMIN'] } },
-    select: { id_usuario: true, username: true },
+    select: { id_usuario: true, username: true, ultimo_acceso: true },
   });
 
-  if (existingAdmin && resetRequested) {
+  const firstProductionAccess = Boolean(existingAdmin && password && !existingAdmin.ultimo_acceso);
+  if (existingAdmin && (resetRequested || firstProductionAccess)) {
     validateCredentials();
     const usernameOwner = await prisma.usuario.findUnique({ where: { username }, select: { id_usuario: true } });
     if (usernameOwner && usernameOwner.id_usuario !== existingAdmin.id_usuario) {
@@ -42,13 +46,18 @@ try {
         intentos_fallidos: 0,
         bloqueado_hasta: null,
         token_version: { increment: 1 },
+        mfa_requerido: false,
         mfa_habilitado: false,
         mfa_secreto: null,
         mfa_ultimo_uso: null,
         password_cambio: new Date(),
       },
     });
-    process.stdout.write(`Administrador ${username} restablecido. Desactive RESET_INITIAL_ADMIN inmediatamente.\n`);
+    process.stdout.write(
+      resetRequested
+        ? `Administrador ${username} restablecido. Desactive RESET_INITIAL_ADMIN inmediatamente.\n`
+        : `Credenciales iniciales aplicadas al administrador ${username}.\n`
+    );
   } else if (existingAdmin) {
     process.stdout.write(`Administrador existente: ${existingAdmin.username}. Bootstrap omitido.\n`);
   } else {

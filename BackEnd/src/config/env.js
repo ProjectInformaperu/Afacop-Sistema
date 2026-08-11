@@ -29,6 +29,8 @@ const schema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET debe tener al menos 32 caracteres'),
   MFA_ENCRYPTION_KEY: z.string().min(32, 'MFA_ENCRYPTION_KEY debe tener al menos 32 caracteres'),
   REQUIRE_MFA: z.enum(['true', 'false']).default('false'),
+  // Exenciones por cuenta, nunca por rol, para no desactivar MFA a todos los administradores.
+  MFA_EXEMPT_USERNAMES: z.string().default(''),
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_ISSUER: z.string().default('radar-360-api'),
   JWT_AUDIENCE: z.string().default('radar-360-clients'),
@@ -55,4 +57,7 @@ if (result.data.NODE_ENV === 'production' && result.data.CORS_ALLOW_ALL === 'tru
 export const env = Object.freeze(result.data);
 export const allowedOrigins = Object.freeze(
   env.FRONTEND_URL.split(',').map(value => value.trim()).filter(Boolean)
+);
+export const mfaExemptUsernames = Object.freeze(
+  env.MFA_EXEMPT_USERNAMES.split(',').map(value => value.trim().toLowerCase()).filter(Boolean)
 );

@@ -103,6 +103,16 @@ test('la cartera del asesor se filtra por asignación activa', () => {
   assert.match(source, /estado: "ACTIVA"/);
 });
 
+test('la excepción MFA de Afacop es nominativa y no desactiva MFA por rol', () => {
+  const auth = fs.readFileSync(path.resolve('src/services/auth.service.js'), 'utf8');
+  const blueprint = fs.readFileSync(path.resolve('../render.yaml'), 'utf8');
+  assert.match(auth, /mfaExemptUsernames\.includes\(usuario\.username/);
+  assert.doesNotMatch(auth, /rol.*mfaExempt/i);
+  assert.match(auth, /if \(usuario\.mfa_habilitado\)/);
+  assert.match(auth, /usuario\.mfa_requerido/);
+  assert.match(blueprint, /MFA_EXEMPT_USERNAMES[\s\S]*value: Afacop/);
+});
+
 test('el cifrado autenticado de secretos MFA permite recuperar el valor íntegro', async () => {
   process.env.DATABASE_URL ||= 'postgresql://test:test@localhost:5432/test';
   process.env.JWT_SECRET = 'test-jwt-secret-with-at-least-thirty-two-characters';

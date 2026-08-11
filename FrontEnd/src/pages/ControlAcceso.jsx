@@ -289,7 +289,13 @@ export default function ControlAcceso() {
 
   const handleSave = async (usuario) => {
     try {
-      const payload = { username: usuario.username, password: usuario.password || undefined, rol: usuario.rol, estado: usuario.estado };
+      const payload = {
+        username: usuario.username,
+        password: usuario.password || undefined,
+        rol: usuario.rol,
+        estado: usuario.estado,
+        mfa_habilitado: Boolean(usuario.mfa_habilitado),
+      };
       const response = usuario.id && !usuario.id.startsWith('u')
         ? await api.put(`/api/usuarios/${usuario.id}`, payload)
         : await api.post('/api/usuarios', payload);

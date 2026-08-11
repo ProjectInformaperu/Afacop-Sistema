@@ -12,7 +12,9 @@ El archivo `render.yaml` despliega el backend y el frontend como un Blueprint.
    - Backend: `https://afacop-backend.onrender.com/health/ready`
    - Frontend: `https://afacop-frontend.onrender.com`
 
-El primer acceso usa el usuario `admin` y la contraseña secreta configurada en `INITIAL_ADMIN_PASSWORD`. Si la base ya contiene un administrador, el bootstrap no crea ni modifica cuentas. Con MFA obligatorio, el primer inicio solicitará vincular Google Authenticator o cualquier aplicación TOTP compatible.
+El primer acceso usa el usuario `Afacop` y la contraseña secreta configurada en `INITIAL_ADMIN_PASSWORD`. `Afacop` es el nombre de acceso; su rol independiente es `ADMINISTRADOR`. El inicio de sesión no distingue mayúsculas de minúsculas. Si la base ya contiene un administrador, el bootstrap no modifica la cuenta salvo durante la inicialización segura o cuando `RESET_INITIAL_ADMIN=true`. Con MFA obligatorio, el primer inicio solicitará vincular Google Authenticator o cualquier aplicación TOTP compatible.
+
+La cuenta inicial `Afacop` está exceptuada de MFA mediante `MFA_EXEMPT_USERNAMES=Afacop`. La excepción se aplica por nombre de usuario, no por rol: los demás administradores y asesores continúan sujetos a `REQUIRE_MFA=true`.
 
 Para recuperar un administrador existente, establezca temporalmente `RESET_INITIAL_ADMIN=true` y una nueva `INITIAL_ADMIN_PASSWORD`, despliegue una vez y vuelva inmediatamente `RESET_INITIAL_ADMIN=false`. El proceso desbloquea la cuenta, invalida sesiones y exige enrolar MFA de nuevo.
 

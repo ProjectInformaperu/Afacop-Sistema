@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
-import { env } from '../config/env.js';
+import { env, mfaExemptUsernames } from '../config/env.js';
 import { normalizeRole } from '../security/roles.js';
 import * as mfaService from './mfa.service.js';
 
@@ -30,7 +30,8 @@ function issueAccessToken(usuario) {
 
 async function login(username, password) {
   try {
-    const usuario = await prisma.usuario.findUnique({ where: { username }, include: { asesor: true } });
+    const normalizedUsername = String(username || '').trim().toLowerCase();
+    const usuario = await prisma.usuario.findUnique({ where: { username: normalizedUsername }, include: { asesor: true } });
     // Comparación dummy para reducir diferencias temporales que faciliten enumeración de usuarios.
     const fallbackHash = '$2b$10$C6UzMDM.H6dfI/f/IKcEe.5Y8R6f0QqM6V7CqY2Y5nJzP9D1r7G7K';
     const validPassword = await bcrypt.compare(password, usuario?.password_hash || fallbackHash);
@@ -48,10 +49,11 @@ async function login(username, password) {
     if (usuario.estado !== 'ACTIVO') return { success: false, code: 'USER_INACTIVE', error: 'Cuenta inactiva. Contacte al administrador.' };
     await prisma.usuario.update({ where: { id_usuario: usuario.id_usuario }, data: { intentos_fallidos: 0, bloqueado_hasta: null, ultimo_acceso: new Date() } });
 
+    const exemptFromGlobalMfa = mfaExemptUsernames.includes(usuario.username.trim().toLowerCase());
     if (usuario.mfa_habilitado) {
       return { success: true, mfaRequired: true, challengeToken: mfaService.createChallenge(usuario) };
     }
-    if (env.REQUIRE_MFA === 'true') {
+    if (usuario.mfa_requerido || (!exemptFromGlobalMfa && env.REQUIRE_MFA === 'true')) {
       return { success: true, mfaEnrollmentRequired: true, challengeToken: mfaService.createEnrollmentChallenge(usuario) };
     }
     return { success: true, token: issueAccessToken(usuario), user: mapearUsuario(usuario) };

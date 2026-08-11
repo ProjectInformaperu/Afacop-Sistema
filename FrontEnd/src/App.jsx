@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext.jsx';
 import { ROLES_CONFIG } from './context/AuthContext.jsx';
 import Login from './pages/Login.jsx';

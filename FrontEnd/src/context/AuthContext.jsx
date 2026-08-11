@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
   }, [api, token, sedeActual?.id]);
 
   const login = async (username, password) => {
-    const response = await api.post("/api/auth/login", { username, password });
+    const response = await api.post("/api/auth/login", { username: username.trim().toLowerCase(), password });
     if (response.data.mfaEnrollmentRequired) {
       const setup = await api.post('/api/auth/mfa/enroll/setup', { challengeToken: response.data.challengeToken });
       return { ...response.data, ...setup.data };
