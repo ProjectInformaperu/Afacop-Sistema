@@ -65,6 +65,7 @@ function normalizeUser(user) {
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [user, setUser] = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(() => Boolean(localStorage.getItem("token")));
   const [usuarios, setUsuarios] = useState([]);
   const [sedeActual, setSedeActual] = useState(() => {
     try { return JSON.parse(localStorage.getItem("sedeActual")) || DEFAULT_SEDE; } catch { return DEFAULT_SEDE; }
@@ -106,6 +107,7 @@ export const AuthProvider = ({ children }) => {
     if (data.user?.rol === "WORKER") throw new Error("Solo los administradores pueden acceder a este portal web.");
     setToken(data.token);
     setUser(loggedUser);
+    setSessionLoading(false);
     localStorage.setItem("token", data.token);
     return data;
   };
@@ -123,11 +125,34 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     if (token) api.post('/api/auth/logout').catch(() => {});
     setToken(null); setUser(null); setUsuarios([]); localStorage.removeItem("token");
+    setSessionLoading(false);
   };
 
   useEffect(() => {
-    if (!token) return;
-    api.get("/api/auth/me").then(res => setUser(normalizeUser(res.data.user))).catch(logout);
+    if (!token) {
+      setSessionLoading(false);
+      return;
+    }
+    let active = true;
+    // En una recarga completa, la validación puede ejecutarse en el mismo ciclo
+    // en que se registra el interceptor. Enviamos el token explícitamente para
+    // que la restauración de sesión no dependa del orden de esos efectos.
+    api.get("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => { if (active) setUser(normalizeUser(res.data.user)); })
+      .catch(error => {
+        if (!active) return;
+        const status = error.response?.status;
+        // Solo una sesión realmente inválida debe expulsar al usuario.
+        // Errores de red o del servidor conservan el token para poder reintentar.
+        if (status === 401 || status === 403) {
+          setToken(null);
+          setUser(null);
+          setUsuarios([]);
+          localStorage.removeItem("token");
+        }
+      })
+      .finally(() => { if (active) setSessionLoading(false); });
+    return () => { active = false; };
   }, [token, api]);
 
   useEffect(() => {
@@ -148,7 +173,7 @@ export const AuthProvider = ({ children }) => {
   const deleteRole = rol => setRolesConfig(prev => { const next = { ...prev }; delete next[rol]; localStorage.setItem("rolesConfig", JSON.stringify(next)); return next; });
   const applyStyles = () => Object.entries(FIXED_THEME_VARS).forEach(([key, value]) => document.documentElement.style.setProperty(key, value));
 
-  return <AuthContext.Provider value={{ token, user, isAuthenticated: Boolean(token && user), login, verifyMfa, confirmMfaEnrollment, logout, api, radarApi: api, API_BASE_URL, sedeActual, cambiarSede, applyStyles, fetchAndApplyTheme: applyStyles, usuarios, setUsuarios, rolesConfig, updateRoleModulos, saveRole, deleteRole, tieneAcceso, tieneAccesoUser: (u, modulo) => Boolean((rolesConfig[u?.rol] || ROLES_CONFIG[u?.rol])?.modulos.includes(modulo)) }}>
+  return <AuthContext.Provider value={{ token, user, sessionLoading, isAuthenticated: Boolean(token && user), login, verifyMfa, confirmMfaEnrollment, logout, api, radarApi: api, API_BASE_URL, sedeActual, cambiarSede, applyStyles, fetchAndApplyTheme: applyStyles, usuarios, setUsuarios, rolesConfig, updateRoleModulos, saveRole, deleteRole, tieneAcceso, tieneAccesoUser: (u, modulo) => Boolean((rolesConfig[u?.rol] || ROLES_CONFIG[u?.rol])?.modulos.includes(modulo)) }}>
     {children}
   </AuthContext.Provider>;
 };

@@ -281,8 +281,8 @@ export default function Workers() {
       {/* MAIN TABLE */}
       <div>
         <div style={{ marginBottom: '24px' }}>
-          <h1 className="text-2xl font-bold">Gestión de Workers - {sedeActual?.nombre || 'General'}</h1>
-          <p className="text-muted">Visualiza el estado de tus trabajadores en campo y su productividad en esta sede.</p>
+          <h1 className="text-2xl font-bold">Gestión de Asesores - {sedeActual?.nombre || 'General'}</h1>
+          <p className="text-muted">Visualiza el estado de tus asesores en campo y su productividad en esta sede.</p>
         </div>
 
         <div className="filter-bar" style={{ gap: '12px', flexWrap: 'wrap' }}>
@@ -388,7 +388,7 @@ export default function Workers() {
           <div className="modal" style={{ maxWidth: '600px', width: '95vw', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: '24px', overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
             <div className="p-10 flex justify-between items-center" style={{ padding: '32px 40px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
               <div>
-                <h2 style={{ fontSize: '24px', fontWeight: '900', color: 'var(--c-text)', margin: 0 }}>Editar Worker</h2>
+                <h2 style={{ fontSize: '24px', fontWeight: '900', color: 'var(--c-text)', margin: 0 }}>Editar asesor</h2>
               </div>
               <button 
                 className="btn-icon" 
@@ -442,7 +442,7 @@ export default function Workers() {
               </div>
               <div className="modal-footer" style={{ padding: '24px 40px', background: 'var(--c-surface-2)', borderTop: '1px solid var(--c-border)', display: 'flex', gap: '16px', justifyContent: 'flex-end', flexShrink: 0 }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setEditingWorker(null)}>Cancelar</button>
-                <button type="submit" className="btn btn-primary" style={{ padding: '10px 24px', borderRadius: '12px' }} disabled={creating}>{creating ? 'Guardando...' : 'Actualizar Worker'}</button>
+                <button type="submit" className="btn btn-primary" style={{ padding: '10px 24px', borderRadius: '12px' }} disabled={creating}>{creating ? 'Guardando...' : 'Actualizar asesor'}</button>
               </div>
             </form>
           </div>
@@ -453,7 +453,7 @@ export default function Workers() {
         <div className="modal-overlay worker-create-overlay">
           <div className="modal worker-create-modal">
             <div className="modal-header">
-              <span className="modal-title">Registrar Nuevo Worker</span>
+              <span className="modal-title">Registrar nuevo asesor</span>
               <button className="btn-ghost btn-sm" onClick={() => setShowModal(false)}><X size={18} /></button>
             </div>
             <form className="worker-create-form" onSubmit={handleCreateWorker}>
@@ -499,7 +499,7 @@ export default function Workers() {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-primary" disabled={creating}>{creating ? 'Guardando...' : 'Crear Worker'}</button>
+                <button type="submit" className="btn btn-primary" disabled={creating}>{creating ? 'Guardando...' : 'Crear asesor'}</button>
               </div>
             </form>
           </div>

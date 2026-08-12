@@ -12,11 +12,11 @@ export default function NotificationCenter() {
     const socket = io(API_BASE_URL, { auth: { token }, transports: ['websocket', 'polling'] });
 
     socket.on('journey_started', () => {
-      addNotification(`Worker ha iniciado jornada`, 'info');
+      addNotification('El asesor ha iniciado su jornada', 'info');
     });
 
     socket.on('journey_finished', () => {
-      addNotification(`Worker ha finalizado jornada`, 'success');
+      addNotification('El asesor ha finalizado su jornada', 'success');
     });
 
     socket.on('visit_started', (data) => {

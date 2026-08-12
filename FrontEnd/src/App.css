@@ -11,6 +11,29 @@
   background-color: var(--c-bg);
 }
 
+.session-loading {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--c-bg);
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.session-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(11,34,161,.18);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: session-spin .7s linear infinite;
+}
+
+@keyframes session-spin { to { transform: rotate(360deg); } }
+
 /* ─── Sidebar ─────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);

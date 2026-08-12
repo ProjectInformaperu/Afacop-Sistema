@@ -225,7 +225,8 @@ function AppLayout({ children, title, pageClass = '' }) {
 }
 
 function ProtectedRoute({ children, title, pageClass, moduloKey }) {
-  const { isAuthenticated, tieneAcceso } = useContext(AuthContext);
+  const { isAuthenticated, sessionLoading, tieneAcceso } = useContext(AuthContext);
+  if (sessionLoading) return <div className="session-loading"><div className="session-loading-spinner" /><span>Verificando sesión...</span></div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (moduloKey && !tieneAcceso(moduloKey)) return <Navigate to="/dashboard" replace />;
   return <AppLayout title={title} pageClass={pageClass}>{children}</AppLayout>;
