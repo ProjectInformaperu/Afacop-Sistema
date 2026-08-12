@@ -266,7 +266,7 @@ export default function Clientes() {
         <select name="estado" className="form-input professional-select" style={{ width: '230px', paddingRight: '42px' }} value={filters.estado} onChange={handleFilterChange}>
           <option value="">Todas las gestiones</option>
           <option value="LIBRE">Libre</option>
-          <option value="EN_VISITA">En visita</option>
+          <option value="EN_VISITA">Asignado</option>
           <option value="VISITADO_PAGO">Gestionado</option>
           <option value="REPROGRAMADO">Reprogramado</option>
           <option value="NO_ENCONTRADO">No encontrado</option>

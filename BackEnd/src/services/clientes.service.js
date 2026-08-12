@@ -152,14 +152,14 @@ async function obtenerClientes({ page = 1, limit = 12, search = "", distrito, es
 async function obtenerPuntosMapa({ estado, fecha_pago, zoom = 6, west, east, south, north, asesorId } = {}) {
   const where = { latitud: { not: null }, longitud: { not: null } };
   if (asesorId) where.asignaciones = { some: { id_asesor: Number(asesorId), estado: "ACTIVA" } };
-  if ([west, east, south, north].every(value => Number.isFinite(value))) {
-    where.latitud = { gte: south, lte: north };
-    where.longitud = { gte: west, lte: east };
-  }
   const clientes = await prisma.cliente.findMany({ where, select: {
     id_cliente: true, dni: true, nombres: true, apellido_paterno: true, apellido_materno: true,
     direccion: true, distrito: true, ultima_gestion: true, deuda_castigada: true, deuda_vigente: true,
     otras_deudas: true, latitud: true, longitud: true,
+    asignaciones: {
+      where: { estado: 'ACTIVA' }, take: 1,
+      select: { id_asignacion: true },
+    },
     rutas_clientes: {
       orderBy: { fecha_actualizar: 'desc' }, take: 1,
       select: { estado_visita: true, fecha_actualizar: true, ruta: { select: { estado: true } } },
@@ -175,17 +175,31 @@ async function obtenerPuntosMapa({ estado, fecha_pago, zoom = 6, west, east, sou
     }
     return { estado: 'LIBRE', fecha: cliente.ultima_gestion };
   };
-  const clientesOperativos = clientes.map(cliente => ({ ...cliente, ...getOperationalState(cliente) }))
-    .filter(cliente => !estado || cliente.estado === estado)
+  const clientesConEstado = clientes.map(cliente => ({ ...cliente, ...getOperationalState(cliente) }))
     .filter(cliente => {
       if (!fecha_pago) return true;
       if (!cliente.fecha) return false;
       return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date(cliente.fecha)) === fecha_pago;
     });
-  const total = clientesOperativos.length;
+  const conteoEstados = { LIBRE: 0, EN_VISITA: 0, GESTIONADO: 0, REPROGRAMADO: 0, NO_ENCONTRADO: 0 };
+  for (const cliente of clientesConEstado) {
+    if (Object.hasOwn(conteoEstados, cliente.estado)) conteoEstados[cliente.estado]++;
+  }
+  const clientesOperativos = clientesConEstado.filter(cliente => !estado || cliente.estado === estado);
+  const total = clientesConEstado.length;
+  // En el mapa, "Asignado" es la etiqueta visual del estado operativo EN_VISITA
+  // (azul): cliente incluido en una ruta que está EN_PROCESO.
+  const totalAsignados = conteoEstados.EN_VISITA;
+  // El viewport limita los marcadores enviados, pero no los contadores globales.
+  const clientesVisibles = [west, east, south, north].every(value => Number.isFinite(value))
+    ? clientesOperativos.filter(cliente => (
+      Number(cliente.latitud) >= south && Number(cliente.latitud) <= north
+      && Number(cliente.longitud) >= west && Number(cliente.longitud) <= east
+    ))
+    : clientesOperativos;
   const gridSize = Math.max(0.0003, 20 / (2 ** Math.max(1, Math.min(18, zoom))));
   const groups = new Map();
-  for (const cliente of clientesOperativos) {
+  for (const cliente of clientesVisibles) {
     const latitud = Number(cliente.latitud); const longitud = Number(cliente.longitud);
     if (!Number.isFinite(latitud) || !Number.isFinite(longitud) || Math.abs(latitud) > 90 || Math.abs(longitud) > 180) continue;
     const key = `${Math.floor(latitud / gridSize)}:${Math.floor(longitud / gridSize)}`;
@@ -208,7 +222,7 @@ async function obtenerPuntosMapa({ estado, fecha_pago, zoom = 6, west, east, sou
       latitud: Number(c.latitud), longitud: Number(c.longitud),
     };
   });
-  return { data: points, total, visibles: clientesOperativos.length, clusters: points.filter(point => point.cluster).length };
+  return { data: points, total, totalAsignados, conteoEstados, visibles: clientesVisibles.length, clusters: points.filter(point => point.cluster).length };
 }
 
 /**

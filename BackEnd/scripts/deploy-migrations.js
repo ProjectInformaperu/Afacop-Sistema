@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { spawnSync } from 'node:child_process';
 import pg from 'pg';
 
@@ -5,7 +6,7 @@ const { Pool } = pg;
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL es obligatorio');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const prismaCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const prismaCli = 'node_modules/prisma/build/index.js';
 
 const stages = [
   {
@@ -68,7 +69,7 @@ const stages = [
 ];
 
 function runPrisma(args) {
-  const result = spawnSync(prismaCommand, ['prisma', ...args], { stdio: 'inherit', env: process.env });
+  const result = spawnSync(process.execPath, [prismaCli, ...args], { stdio: 'inherit', env: process.env });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`Prisma finalizo con codigo ${result.status}`);
 }

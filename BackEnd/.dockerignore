@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.git
+.github
+node_modules
+generated
+coverage
+dist
+*.log
+mobile-check.*
+scratch_db.mjs
+verify_db.js
+check_api.js
+docker-compose*.yml
+Dockerfile*
+README*

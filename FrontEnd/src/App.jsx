@@ -40,6 +40,7 @@ const Icon = ({ name, size = 16 }) => {
 function Sidebar() {
   const { sedeActual, cambiarSede, user, tieneAcceso, rolesConfig } = useContext(AuthContext);
   const [showSedeMenu, setShowSedeMenu] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const sedeDropdownRef = React.useRef(null);
 
   const sedesList = [
@@ -59,18 +60,29 @@ function Sidebar() {
 
   const can = (mod) => tieneAcceso(mod);
   const rolCfg = user ? (rolesConfig || ROLES_CONFIG)[user.rol] : null;
+  const toggleSidebar = () => {
+    setCollapsed(value => {
+      const next = !value;
+      localStorage.setItem('sidebarCollapsed', String(next));
+      if (next) setShowSedeMenu(false);
+      return next;
+    });
+  };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header" style={{ padding: '20px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-          <img src={logoRadar} alt="Logo Radar 360" style={{ height: '44px', width: 'auto' }} />
-          <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
-            Mi Radar<span style={{ fontSize: '18px', opacity: 0.9 }}> 360°</span>
+    <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}`}>
+      <button className="sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={collapsed ? 'Desplegar menú' : 'Contraer menú'} aria-expanded={!collapsed}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d={collapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'} /></svg>
+      </button>
+      <div className="sidebar-header">
+        <div className="sidebar-brand">
+          <span className="sidebar-logo-plate"><img src={logoRadar} alt="Logo Radar 360" /></span>
+          <h2 className="sidebar-brand-name">
+            Mi Radar <span className="sidebar-brand-360">360<span className="sidebar-brand-degree">°</span></span>
           </h2>
         </div>
 
-        <div style={{ position: 'relative' }} ref={sedeDropdownRef}>
+        <div className="sidebar-sede" ref={sedeDropdownRef}>
           <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.6)', fontWeight: '700', marginBottom: '5px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>SEDE ACTUAL</div>
           <button onClick={() => setShowSedeMenu(!showSedeMenu)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', background: '#FEFEFE', fontSize: '11px', fontWeight: '800', height: '34px', padding: '0 12px', border: '1px solid #FEFEFE', borderRadius: '8px', color: 'var(--c-primary)', cursor: 'pointer' }}>
@@ -93,27 +105,27 @@ function Sidebar() {
       <div className="sidebar-content" style={{ flex: 1, overflowY: 'auto', paddingBottom: '12px' }}>
         <div className="sidebar-subtitle">MONITOREO</div>
         <ul className="sidebar-nav">
-          {can('principal') && <li><NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="dashboard" />Principal</NavLink></li>}
-          {can('mapa')      && <li><NavLink to="/map"       className={({ isActive }) => isActive ? 'active' : ''}><Icon name="map" />Mapa</NavLink></li>}
+          {can('principal') && <li><NavLink to="/dashboard" title="Principal" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="dashboard" /><span>Principal</span></NavLink></li>}
+          {can('mapa')      && <li><NavLink to="/map" title="Mapa" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="map" /><span>Mapa</span></NavLink></li>}
         </ul>
 
         <div className="sidebar-subtitle">CRÉDITO</div>
         <ul className="sidebar-nav">
-          {can('admision') && <li><NavLink to="/admision" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="admision" />Evaluación y Admisión</NavLink></li>}
-          {can('clientes') && <li><NavLink to="/clientes" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="clients" />Clientes</NavLink></li>}
-          {can('rutas')    && <li><NavLink to="/rutas"    className={({ isActive }) => isActive ? 'active' : ''}><Icon name="routes" />Rutas</NavLink></li>}
+          {can('admision') && <li><NavLink to="/admision" title="Evaluación y Admisión" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="admision" /><span>Evaluación y Admisión</span></NavLink></li>}
+          {can('clientes') && <li><NavLink to="/clientes" title="Clientes" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="clients" /><span>Clientes</span></NavLink></li>}
+          {can('rutas')    && <li><NavLink to="/rutas" title="Rutas" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="routes" /><span>Rutas</span></NavLink></li>}
         </ul>
 
         <div className="sidebar-subtitle">OPERACIONES</div>
         <ul className="sidebar-nav">
-          {can('asesores') && <li><NavLink to="/workers"  className={({ isActive }) => isActive ? 'active' : ''}><Icon name="workers" />Gestión de Asesores</NavLink></li>}
+          {can('asesores') && <li><NavLink to="/workers" title="Gestión de Asesores" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="workers" /><span>Gestión de Asesores</span></NavLink></li>}
         </ul>
 
         {can('acceso') && (
           <>
             <div className="sidebar-subtitle">ADMINISTRACIÓN</div>
             <ul className="sidebar-nav">
-              <li><NavLink to="/acceso" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="shield" />Control de Acceso</NavLink></li>
+              <li><NavLink to="/acceso" title="Control de Acceso" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="shield" /><span>Control de Acceso</span></NavLink></li>
             </ul>
           </>
         )}

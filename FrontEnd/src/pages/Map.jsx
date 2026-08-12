@@ -19,7 +19,7 @@ L.Icon.Default.mergeOptions({
 
 const GESTION_META = {
   LIBRE: { label: 'Libre', color: '#334155' },
-  EN_VISITA: { label: 'En visita', color: '#2563EB' },
+  EN_VISITA: { label: 'Asignado', color: '#2563EB' },
   GESTIONADO: { label: 'Gestionado', color: '#10B981' },
   REPROGRAMADO: { label: 'Reprogramado', color: '#F59E0B' },
   NO_ENCONTRADO: { label: 'No encontrado', color: '#EF4444' },
@@ -67,7 +67,7 @@ function ClusterMarker({ point }) {
 
 export default function MapPage() {
   const { radarApi, sedeActual } = useContext(AuthContext);
-  const [data, setData] = useState({ clientes: [], workers: [], totalClientes: 0 });
+  const [data, setData] = useState({ clientes: [], workers: [], totalClientes: 0, conteoEstados: {} });
   const [mapView, setMapView] = useState({ zoom: 10 });
   const [, setLoading] = useState(true);
 
@@ -95,6 +95,7 @@ export default function MapPage() {
         clientes: allClients,
         workers: allWorkers.filter(w => w.latitud != null && w.longitud != null),
         totalClientes: clientsRes.data.total || 0,
+        conteoEstados: clientsRes.data.conteoEstados || {},
       });
     } catch (e) {
       console.error('Error loading map data', e);
@@ -181,7 +182,7 @@ export default function MapPage() {
           >
             <option value="TODOS">Todas las Gestiones</option>
             <option value="LIBRE">LIBRE</option>
-            <option value="EN_VISITA">EN VISITA</option>
+            <option value="EN_VISITA">ASIGNADO</option>
             <option value="GESTIONADO">GESTIONADO</option>
             <option value="REPROGRAMADO">REPROGRAMADO</option>
             <option value="NO_ENCONTRADO">NO ENCONTRADO</option>
@@ -233,13 +234,14 @@ export default function MapPage() {
         <div style={{
           position: 'absolute', right: 16, bottom: 16, zIndex: 700,
           background: 'rgba(255,255,255,0.95)', border: '1px solid #E2E8F0', borderRadius: 12,
-          padding: '10px 12px', boxShadow: '0 8px 24px rgba(15,23,42,0.14)', backdropFilter: 'blur(6px)'
+          padding: '10px 12px', minWidth: 180, boxShadow: '0 8px 24px rgba(15,23,42,0.14)', backdropFilter: 'blur(6px)'
         }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 7 }}>Estado de gestión</div>
           {Object.entries(GESTION_META).filter(([key]) => key !== 'MIXTO').map(([key, meta]) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11, color: '#334155', marginTop: 5 }}>
               <span style={{ width: 9, height: 9, borderRadius: '50%', background: meta.color, boxShadow: `0 0 0 2px ${meta.color}22` }} />
-              {meta.label}
+              <span>{meta.label}</span>
+              <strong style={{ marginLeft: 'auto', minWidth: 22, textAlign: 'right', color: '#0F172A' }}>{data.conteoEstados[key] || 0}</strong>
             </div>
           ))}
         </div>

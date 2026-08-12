@@ -1,0 +1,53 @@
+# Blueprint alternativo para validar Docker sin modificar el backend productivo
+# existente. Seleccione este archivo al crear un Blueprint nuevo en Render.
+services:
+  - type: web
+    name: afacop-backend-docker
+    runtime: docker
+    plan: starter
+    region: ohio
+    dockerfilePath: ./BackEnd/Dockerfile
+    dockerContext: ./BackEnd
+    dockerCommand: node src/server.js
+    preDeployCommand: npm run deploy:prepare
+    healthCheckPath: /health/ready
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: GEOCODING_BASE_URL
+        value: https://nominatim.openstreetmap.org
+      - key: JWT_SECRET
+        sync: false
+      - key: MFA_ENCRYPTION_KEY
+        sync: false
+      - key: INITIAL_ADMIN_USERNAME
+        value: Afacop
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false
+      - key: RESET_INITIAL_ADMIN
+        value: "false"
+      - key: REQUIRE_MFA
+        value: "true"
+      - key: MFA_EXEMPT_USERNAMES
+        value: Afacop
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_ISSUER
+        value: radar-360-api
+      - key: JWT_AUDIENCE
+        value: radar-360-clients
+      - key: FRONTEND_URL
+        value: https://afacop-frontend.onrender.com
+      - key: CORS_ALLOW_ALL
+        value: "false"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: LOG_LEVEL
+        value: info
+      - key: MAX_LOGIN_FAILURES
+        value: "5"
+      - key: ACCOUNT_LOCK_MINUTES
+        value: "15"
