@@ -26,7 +26,6 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import visitasRoutes from './routes/visitas.routes.js';
 import usuariosRoutes from './routes/usuarios.routes.js';
 import importacionesRoutes from './routes/importaciones.routes.js';
-import calidadRoutes from './routes/calidad.routes.js';
 import seguridadRoutes from './routes/seguridad.routes.js';
 import { resumePendingJobs } from './services/importaciones.service.js';
 
@@ -139,7 +138,6 @@ app.use('/api/visitas', visitasRoutes);
 app.use('/api/reportes', visitasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/importaciones', importacionesRoutes);
-app.use('/api/calidad', calidadRoutes);
 app.use('/api/seguridad', seguridadRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);

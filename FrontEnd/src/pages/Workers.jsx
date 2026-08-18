@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
@@ -295,7 +296,7 @@ export default function Workers() {
             <option value="ACTIVO">Activos</option>
             <option value="INACTIVO">Inactivos</option>
           </select>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="workers-toolbar-actions" style={{ display: 'flex', gap: '12px' }}>
             <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".xlsx" onChange={handleFileChange} />
             <button className="btn btn-ghost" style={{ border: '1px solid var(--c-border)' }} onClick={handleImportExcel} disabled={creating}>Importar Excel</button>
             <button className="btn btn-primary" style={{ padding: '12px 24px' }} onClick={() => setShowModal(true)}>
@@ -304,8 +305,8 @@ export default function Workers() {
           </div>
         </div>
 
-        <div className="table-wrap">
-          <table>
+        <div className="table-wrap workers-table-wrap">
+          <table className="workers-table">
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -317,7 +318,7 @@ export default function Workers() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="5" className="text-center"><div className="spinner"></div></td></tr>
+                <tr className="workers-loading-row"><td colSpan="5" className="text-center"><div className="spinner"></div></td></tr>
               ) : filteredWorkers.length === 0 ? (
                 <tr className="table-empty-row">
                   <td colSpan="5">
@@ -353,7 +354,7 @@ export default function Workers() {
                   onClick={() => handleSelectWorker(w)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <td style={{ borderLeft: `6px solid ${getWorkerStatusColor(w)}`, paddingLeft: '16px' }}>
+                  <td data-label="Asesor" style={{ '--worker-status-color': getWorkerStatusColor(w), borderLeft: `6px solid ${getWorkerStatusColor(w)}`, paddingLeft: '16px' }}>
                     <div className="flex items-center gap-3">
                       <div className="avatar-small" style={{ width: '48px', height: '48px' }}>
                         <img src={getAvatarUrl(w.nombres, w.id)} alt="avatar" />
@@ -364,14 +365,14 @@ export default function Workers() {
                       </div>
                     </div>
                   </td>
-                  <td>{w.dni} <br/> <small className="text-muted">{w.telefono}</small></td>
-                  <td>{w.distrito || '--'}</td>
-                  <td>
+                  <td data-label="DNI / Teléfono">{w.dni} <br/> <small className="text-muted">{w.telefono}</small></td>
+                  <td data-label="Distrito base">{w.distrito || '--'}</td>
+                  <td data-label="Estado">
                     <span className={`badge ${w.estado === 'ACTIVO' ? 'badge-activo' : 'badge-inactivo'}`}>
                       {w.estado}
                     </span>
                   </td>
-                  <td className="table-col-final" style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  <td data-label="Acciones" className="table-col-final" style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setEditingWorker(w); }}>Editar</button>
                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--c-danger)' }} onClick={(e) => { e.stopPropagation(); setDeletingWorker(w); }}>Eliminar</button>
                   </td>
@@ -449,7 +450,7 @@ export default function Workers() {
         </div>
       )}
 
-      {showModal && (
+      {showModal && createPortal(
         <div className="modal-overlay worker-create-overlay">
           <div className="modal worker-create-modal">
             <div className="modal-header">
@@ -503,7 +504,8 @@ export default function Workers() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {deletingWorker && (

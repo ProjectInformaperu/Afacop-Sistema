@@ -11,7 +11,6 @@ import WorkerDetail from './pages/WorkerDetail.jsx';
 import Rutas from './pages/Rutas.jsx';
 import Admision from './pages/Admision.jsx';
 import ControlAcceso from './pages/ControlAcceso.jsx';
-import Calidad from './pages/Calidad.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';
 import './index.css';
 import './App.css';
@@ -40,7 +39,10 @@ const Icon = ({ name, size = 16 }) => {
 function Sidebar() {
   const { sedeActual, cambiarSede, user, tieneAcceso, rolesConfig } = useContext(AuthContext);
   const [showSedeMenu, setShowSedeMenu] = React.useState(false);
-  const [collapsed, setCollapsed] = React.useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+  const [collapsed, setCollapsed] = React.useState(() => {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    return isMobile || localStorage.getItem('sidebarCollapsed') === 'true';
+  });
   const sedeDropdownRef = React.useRef(null);
 
   const sedesList = [
@@ -67,6 +69,13 @@ function Sidebar() {
       if (next) setShowSedeMenu(false);
       return next;
     });
+  };
+
+  const closeMobileMenu = () => {
+    if (!window.matchMedia('(max-width: 768px)').matches) return;
+    setCollapsed(true);
+    localStorage.setItem('sidebarCollapsed', 'true');
+    setShowSedeMenu(false);
   };
 
   return (
@@ -105,27 +114,27 @@ function Sidebar() {
       <div className="sidebar-content" style={{ flex: 1, overflowY: 'auto', paddingBottom: '12px' }}>
         <div className="sidebar-subtitle">MONITOREO</div>
         <ul className="sidebar-nav">
-          {can('principal') && <li><NavLink to="/dashboard" title="Principal" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="dashboard" /><span>Principal</span></NavLink></li>}
-          {can('mapa')      && <li><NavLink to="/map" title="Mapa" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="map" /><span>Mapa</span></NavLink></li>}
+          {can('principal') && <li><NavLink to="/dashboard" onClick={closeMobileMenu} title="Principal" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="dashboard" /><span>Principal</span></NavLink></li>}
+          {can('mapa')      && <li><NavLink to="/map" onClick={closeMobileMenu} title="Mapa" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="map" /><span>Mapa</span></NavLink></li>}
         </ul>
 
         <div className="sidebar-subtitle">CRÉDITO</div>
         <ul className="sidebar-nav">
-          {can('admision') && <li><NavLink to="/admision" title="Evaluación y Admisión" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="admision" /><span>Evaluación y Admisión</span></NavLink></li>}
-          {can('clientes') && <li><NavLink to="/clientes" title="Clientes" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="clients" /><span>Clientes</span></NavLink></li>}
-          {can('rutas')    && <li><NavLink to="/rutas" title="Rutas" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="routes" /><span>Rutas</span></NavLink></li>}
+          {can('admision') && <li><NavLink to="/admision" onClick={closeMobileMenu} title="Evaluación y Admisión" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="admision" /><span>Evaluación y Admisión</span></NavLink></li>}
+          {can('clientes') && <li><NavLink to="/clientes" onClick={closeMobileMenu} title="Clientes" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="clients" /><span>Clientes</span></NavLink></li>}
+          {can('rutas')    && <li><NavLink to="/rutas" onClick={closeMobileMenu} title="Rutas" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="routes" /><span>Rutas</span></NavLink></li>}
         </ul>
 
         <div className="sidebar-subtitle">OPERACIONES</div>
         <ul className="sidebar-nav">
-          {can('asesores') && <li><NavLink to="/workers" title="Gestión de Asesores" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="workers" /><span>Gestión de Asesores</span></NavLink></li>}
+          {can('asesores') && <li><NavLink to="/workers" onClick={closeMobileMenu} title="Gestión de Asesores" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="workers" /><span>Gestión de Asesores</span></NavLink></li>}
         </ul>
 
         {can('acceso') && (
           <>
             <div className="sidebar-subtitle">ADMINISTRACIÓN</div>
             <ul className="sidebar-nav">
-              <li><NavLink to="/acceso" title="Control de Acceso" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="shield" /><span>Control de Acceso</span></NavLink></li>
+              <li><NavLink to="/acceso" onClick={closeMobileMenu} title="Control de Acceso" className={({ isActive }) => isActive ? 'active' : ''}><Icon name="shield" /><span>Control de Acceso</span></NavLink></li>
             </ul>
           </>
         )}
@@ -246,7 +255,6 @@ function ModuleRoutes() {
       <Route path="/admision"  element={<ProtectedRoute title="Admisión"   moduloKey="admision"><Admision /></ProtectedRoute>} />
       <Route path="/rutas"     element={<ProtectedRoute title="Rutas"      moduloKey="rutas"><Rutas /></ProtectedRoute>} />
       <Route path="/acceso"    element={<ProtectedRoute title="Control de Acceso" moduloKey="acceso"><ControlAcceso /></ProtectedRoute>} />
-      <Route path="/calidad"   element={<ProtectedRoute title="Calidad ISO 9001" moduloKey="calidad"><Calidad /></ProtectedRoute>} />
       <Route path="*"          element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

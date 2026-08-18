@@ -1,10 +1,40 @@
 import React, { useState, useContext, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
 import { ROLES_CONFIG, MODULOS, DEMO_USERS } from '../context/AuthContext.jsx';
 import { Shield, Users, Search, Plus, Edit2, Trash2, Check, X, Lock, Unlock, Key, AlertTriangle, ChevronRight, Save, RotateCcw } from 'lucide-react';
 
 const MODULOS_LIST = Object.values(MODULOS);
+
+function describeAuditEntry(entry) {
+  const route = entry.ruta || '';
+  const success = entry.estado_http < 400;
+  if (route === '/api/auth/login') return success ? 'Inicio de sesión exitoso' : 'Intento de acceso rechazado';
+  if (route === '/api/auth/logout') return 'Cierre de sesión';
+  if (route.includes('/mfa/')) return success ? 'Verificación de seguridad completada' : 'Verificación de seguridad fallida';
+  if (route.startsWith('/api/usuarios')) {
+    if (entry.metodo === 'POST') return 'Usuario creado';
+    if (entry.metodo === 'DELETE') return success ? 'Usuario eliminado' : 'Eliminación de usuario rechazada';
+    if (['PUT', 'PATCH'].includes(entry.metodo)) return 'Usuario o permisos actualizados';
+  }
+  return success ? 'Operación administrativa completada' : 'Operación administrativa rechazada';
+}
+
+function describeDevice(userAgent = '') {
+  if (!userAgent) return 'Dispositivo no identificado';
+  const browser = /Edg\//.test(userAgent) ? 'Edge'
+    : /CriOS\//.test(userAgent) ? 'Chrome iOS'
+      : /Chrome\//.test(userAgent) ? 'Chrome'
+        : /Firefox\//.test(userAgent) ? 'Firefox'
+          : /Safari\//.test(userAgent) ? 'Safari' : 'Navegador web';
+  const system = /iPhone|iPad/.test(userAgent) ? 'iOS'
+    : /Android/.test(userAgent) ? 'Android'
+      : /Windows/.test(userAgent) ? 'Windows'
+        : /Mac OS X/.test(userAgent) ? 'macOS'
+          : /Linux/.test(userAgent) ? 'Linux' : 'Sistema no identificado';
+  return `${browser} · ${system}`;
+}
 
 // ─── Badges ───────────────────────────────────────────────────
 function RoleBadge({ rol, rolesConfig }) {
@@ -94,7 +124,7 @@ function ModalUsuario({ usuario, onClose, onSave, rolesConfig }) {
     onSave({ ...form, id: usuario?.id || `u${Date.now()}` });
   };
 
-  return (
+  return createPortal((
     <div className="user-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(11,34,161,0.15)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20000, padding: 20 }}>
       <div className="user-modal-card" style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E5E7EB', width: '100%', maxWidth: 540, boxShadow: '0 24px 64px rgba(0,0,0,0.12)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #E5E7EB', background: '#F8FAFF', borderRadius: '16px 16px 0 0' }}>
@@ -174,7 +204,7 @@ function ModalUsuario({ usuario, onClose, onSave, rolesConfig }) {
         </form>
       </div>
     </div>
-  );
+  ), document.body);
 }
 
 // ─── Panel de edición de permisos de rol ──────────────────────
@@ -267,9 +297,12 @@ export default function ControlAcceso() {
     api.get('/api/seguridad/auditoria', { params: { limit: 50 } }).then(response => {
       setAuditLog((response.data.data || []).map(entry => ({
         id: entry.id_auditoria,
-        desc: `${entry.metodo} ${entry.ruta} · HTTP ${entry.estado_http}`,
+        desc: describeAuditEntry(entry),
         user: entry.actor || 'anonymous',
         fecha: new Date(entry.fecha).toLocaleString('es-PE'),
+        source: 'Portal web',
+        ip: entry.ip_address || (entry.ip_hash ? `Huella ${entry.ip_hash.slice(0, 10)}` : 'IP no disponible'),
+        device: describeDevice(entry.user_agent),
         tipo: entry.estado_http >= 400 ? 'ALERTA' : 'OPERACIÓN',
         color: entry.estado_http >= 400 ? '#DC2626' : '#059669',
         icon: entry.estado_http >= 400 ? <AlertTriangle size={15}/> : <Unlock size={15}/>,
@@ -356,7 +389,7 @@ export default function ControlAcceso() {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="access-control-page" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
       {/* ── Header ─────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
@@ -396,7 +429,7 @@ export default function ControlAcceso() {
       </div>
 
       {/* ── Tabs ───────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '0', borderBottom: '2px solid #E5E7EB' }}>
+      <div className="access-tabs" style={{ display: 'flex', gap: '0', borderBottom: '2px solid #E5E7EB' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             style={{ padding: '10px 20px', fontSize: '13px', fontWeight: tab === t.key ? '700' : '500', color: tab === t.key ? '#0B22A1' : '#6C757D', background: 'none', border: 'none', borderBottom: tab === t.key ? '2px solid #0B22A1' : '2px solid transparent', cursor: 'pointer', transition: 'all 0.15s', marginBottom: '-2px', letterSpacing: '-0.1px' }}>
@@ -409,7 +442,7 @@ export default function ControlAcceso() {
       {tab === 'usuarios' && (
         <>
           {/* Filtros */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div className="access-filters" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: '1 1 0', minWidth: 0 }}>
               <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre, usuario o correo..."
@@ -434,8 +467,8 @@ export default function ControlAcceso() {
           </div>
 
           {/* Tabla */}
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="access-users-table-wrap" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <table className="access-users-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#F8F9FA' }}>
                   {['Operador', 'Correo', 'Rol', 'Sede', 'Módulos', 'Estado', 'Acciones'].map(h => (
@@ -445,7 +478,7 @@ export default function ControlAcceso() {
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={7} style={{ padding: '48px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>
+                  <tr className="access-empty-row"><td colSpan={7} style={{ padding: '48px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>
                     <Shield size={28} color="#DEE2E6" style={{ display: 'block', margin: '0 auto 10px' }} />
                     No se encontraron operadores
                   </td></tr>
@@ -455,7 +488,7 @@ export default function ControlAcceso() {
                     <tr key={u.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F3F4F6' : 'none', transition: 'background 0.1s' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#FAFBFF'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <td style={{ padding: '12px 16px' }}>
+                      <td data-label="Operador" style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: (currentRolesConfig[u.rol] || ROLES_CONFIG.ASESOR).bg, color: (currentRolesConfig[u.rol] || ROLES_CONFIG.ASESOR).color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800', flexShrink: 0 }}>
                             {(u.nombres || '?')[0]}
@@ -466,10 +499,10 @@ export default function ControlAcceso() {
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6C757D' }}>{u.email || '—'}</td>
-                      <td style={{ padding: '12px 16px' }}><RoleBadge rol={u.rol} rolesConfig={currentRolesConfig} /></td>
-                      <td style={{ padding: '12px 16px', fontSize: '12px', color: '#212529', fontWeight: '600' }}>{u.sede || '—'}</td>
-                      <td style={{ padding: '12px 16px' }}>
+                      <td data-label="Correo" style={{ padding: '12px 16px', fontSize: '13px', color: '#6C757D' }}>{u.email || '—'}</td>
+                      <td data-label="Rol" style={{ padding: '12px 16px' }}><RoleBadge rol={u.rol} rolesConfig={currentRolesConfig} /></td>
+                      <td data-label="Sede" style={{ padding: '12px 16px', fontSize: '12px', color: '#212529', fontWeight: '600' }}>{u.sede || '—'}</td>
+                      <td data-label="Módulos" style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', maxWidth: '200px' }}>
                           {rolCfg.modulos.slice(0, 3).map(m => (
                             <span key={m} style={{ fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', background: '#EEF2FF', color: '#3730A3', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
@@ -483,8 +516,8 @@ export default function ControlAcceso() {
                           )}
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px' }}><EstadoBadge estado={u.estado} /></td>
-                      <td style={{ padding: '12px 16px' }}>
+                      <td data-label="Estado" style={{ padding: '12px 16px' }}><EstadoBadge estado={u.estado} /></td>
+                      <td data-label="Acciones" className="access-user-actions" style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', gap: '4px' }}>
                           <button onClick={() => toggleEstado(u)} title={u.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}
                             style={{ ...S.iconBtn, color: u.estado === 'ACTIVO' ? '#DC2626' : '#059669' }}>
@@ -527,8 +560,8 @@ export default function ControlAcceso() {
           </div>
 
           {/* Tabla de permisos */}
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '10px', overflow: 'auto', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+          <div className="permissions-table-wrap" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '10px', overflow: 'auto', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <table className="permissions-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
               <thead>
                 <tr style={{ background: '#F8F9FA' }}>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '10px', fontWeight: '800', color: '#6C757D', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: '1px solid #E5E7EB', width: '200px' }}>ROL</th>
@@ -541,7 +574,7 @@ export default function ControlAcceso() {
               <tbody>
                 {Object.entries(currentRolesConfig).map(([rolKey, rolCfg], i, arr) => (
                   <tr key={rolKey} style={{ borderBottom: i < arr.length - 1 ? '1px solid #F3F4F6' : 'none', background: editingRol === rolKey ? '#FAFBFF' : 'transparent' }}>
-                    <td style={{ padding: '14px 16px' }}>
+                    <td data-label="Rol" className="permission-role" style={{ padding: '14px 16px' }}>
                       <RoleBadge rol={rolKey} rolesConfig={currentRolesConfig} />
                       <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '3px' }}>
                         {localUsuarios.filter(u => u.rol === rolKey).length} usuario{localUsuarios.filter(u => u.rol === rolKey).length !== 1 ? 's' : ''}
@@ -550,14 +583,14 @@ export default function ControlAcceso() {
                     {MODULOS_LIST.map(m => {
                       const tiene = rolCfg.modulos.includes(m.key);
                       return (
-                        <td key={m.key} style={{ padding: '14px 10px', textAlign: 'center' }}>
+                        <td key={m.key} data-label={m.label} className="permission-module" style={{ padding: '14px 10px', textAlign: 'center' }}>
                           <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '6px', background: tiene ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.06)', color: tiene ? '#059669' : '#DC2626' }}>
                             {tiene ? <Check size={12} strokeWidth={2.5} /> : <X size={12} strokeWidth={2.5} />}
                           </div>
                         </td>
                       );
                     })}
-                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <td data-label="Acciones" className="permission-actions" style={{ padding: '14px 16px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                         <button onClick={() => setEditingRol(editingRol === rolKey ? null : rolKey)}
                           style={{ ...S.btnGhost, padding: '5px 10px', fontSize: '11px', fontWeight: '700', color: '#0B22A1', borderColor: '#0B22A1', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -737,8 +770,11 @@ export default function ControlAcceso() {
                     {entry.icon}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#212529', marginBottom: '2px' }}>{entry.desc}</div>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{entry.user} · {entry.fecha}</div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#212529', marginBottom: '4px' }}>{entry.desc}</div>
+                    <div style={{ fontSize: '11px', color: '#6C757D', lineHeight: 1.55 }}>
+                      <strong>{entry.user}</strong> · {entry.source} · IP: {entry.ip}<br />
+                      {entry.device} · {entry.fecha}
+                    </div>
                   </div>
                   <span style={{ fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '12px', background: entry.color + '14', color: entry.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
                     {entry.tipo}

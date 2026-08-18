@@ -918,7 +918,7 @@ return (
     ) : (
       // Planificador existente (mantener lógica actual)
 
-    <div className="dashboard-page" style={{ height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div className="dashboard-page route-planner-page" style={{ height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
       {/* Título */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
@@ -931,7 +931,7 @@ return (
       </div>
 
       {/* Controles en fila horizontal */}
-      <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end', padding: '16px 24px', background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', flexShrink: 0 }}>
+      <div className="card route-planner-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end', padding: '16px 24px', background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', flexShrink: 0 }}>
 
         {/* Asesor */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '220px' }}>
@@ -1047,7 +1047,7 @@ return (
         </div>
 
         {/* Botón Guardar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginLeft: 'auto' }}>
+        <div className="route-planner-actions" style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginLeft: 'auto' }}>
              <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 className="btn btn-primary"
@@ -1122,11 +1122,11 @@ return (
       </div>
 
       {/* Contenedor Principal (Mapa + Panel de Clientes Seleccionados si hay asesor) */}
-      <div style={{ display: 'flex', flex: 1, gap: '20px', minHeight: '300px', overflow: 'hidden' }}>
+      <div className="route-planner-workspace" style={{ display: 'flex', flex: 1, gap: '20px', minHeight: '300px', overflow: 'hidden' }}>
 
         {/* Mapa (75-80% si hay asesor, 100% si no) */}
         <div
-          className="card"
+          className="card route-planner-map"
           style={{ flex: nuevaRuta.id_asesor ? 3.5 : 1, width: '100%', minWidth: 0, padding: 0, overflow: 'hidden', position: 'relative', border: '1px solid var(--c-border)', borderRadius: '16px', transition: 'flex 0.3s ease' }}
 
         >
@@ -1261,7 +1261,7 @@ return (
           </MapContainer>
 
           {/* LEYENDA FLOTANTE MINIMALISTA */}
-          <div style={{
+          <div className="route-map-legend" style={{
             position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
             background: 'var(--c-surface)', padding: '12px', borderRadius: '12px',
             boxShadow: 'var(--shadow)', border: '1px solid var(--c-border)',
@@ -1285,7 +1285,7 @@ return (
         {/* Panel de Clientes Cercanos (solo si hay asesor) */}
         {nuevaRuta.id_asesor && selectedAdvisor && (() => {
           return (
-            <div className="card" style={{ flex: 1.2, display: 'flex', flexDirection: 'column', padding: '16px', background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', overflow: 'hidden' }}>
+            <div className="card route-selected-clients" style={{ flex: 1.2, display: 'flex', flexDirection: 'column', padding: '16px', background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', overflow: 'hidden' }}>
 
               <h3 style={{ fontSize: '16px', fontWeight: '800', borderBottom: '1px solid var(--c-border)', paddingBottom: '12px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--c-text)' }}>
                 <span>Clientes Seleccionados</span>

@@ -212,6 +212,7 @@ model AuditoriaSeguridad {
   metodo       String   @db.VarChar(10)
   ruta         String   @db.VarChar(255)
   estado_http  Int
+  ip_address   String?  @db.VarChar(45)
   ip_hash      String?  @db.VarChar(64)
   user_agent   String?  @db.VarChar(255)
 

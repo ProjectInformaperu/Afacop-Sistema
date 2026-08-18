@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
+import { createPortal } from 'react-dom';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { ClipboardX } from 'lucide-react';
@@ -213,13 +214,13 @@ export default function Admision() {
   };
 
   return (
-    <div className="page fade-in" style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="page fade-in admission-page" style={{ padding: '20px' }}>
+      <div className="admission-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-text)' }}>Evaluaciones y Admisión</h1>
           <p style={{ color: 'var(--c-muted)', fontSize: '14px', marginTop: '4px' }}>Visualiza las evaluaciones de campo y realiza consultas manuales en la SBS.</p>
         </div>
-        <button 
+        <button className="admission-manual-button"
           onClick={() => { setShowEvalModal(true); setEvalResult(null); setDniSearch(''); }}
           style={{
             backgroundColor: 'var(--c-primary)', color: 'white', border: 'none', padding: '10px 20px', 
@@ -232,7 +233,7 @@ export default function Admision() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '20px' }}>
+      <div className="admission-summary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '20px' }}>
         {(() => {
           const aptos = evaluacionesVisibles.filter(e => e.estadoVisible === 'APTO').length;
           const noAptos = evaluacionesVisibles.filter(e => e.estadoVisible === 'NO APTO').length;
@@ -328,7 +329,7 @@ export default function Admision() {
         </div>
       </div>
 
-      <div style={{ backgroundColor: 'var(--c-surface)', borderRadius: '12px', padding: '20px', border: '1px solid var(--c-border)', overflowX: 'auto' }}>
+      <div className="admission-results-card" style={{ backgroundColor: 'var(--c-surface)', borderRadius: '12px', padding: '20px', border: '1px solid var(--c-border)' }}>
         {/* Barra de búsqueda y filtros */}
         <div className="admission-filter-bar" style={{ display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: '1 1 0', minWidth: 0 }}>
@@ -355,7 +356,7 @@ export default function Admision() {
           </span>
         </div>
 
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <table className="admission-results-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--c-border)', color: 'var(--c-muted)', fontSize: '12px', textTransform: 'uppercase' }}>
               <th style={{ padding: '12px', fontWeight: 'bold' }}>DNI</th>
@@ -421,13 +422,13 @@ export default function Admision() {
                   onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.02)'}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--c-text)' }}>{ev.dni}</td>
-                  <td style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.ape_pat}</td>
-                  <td style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.ape_mat}</td>
-                  <td style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.nombres}</td>
-                  <td style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.productoVisible}</td>
-                  <td style={{ padding: '12px', color: 'var(--c-text)', fontWeight: 'bold' }}>{formatLinea(ev.lineaVisible)}</td>
-                  <td style={{ padding: '12px' }}>
+                  <td data-label="DNI" style={{ padding: '12px', fontWeight: 'bold', color: 'var(--c-text)' }}>{ev.dni}</td>
+                  <td data-label="Apellido paterno" style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.ape_pat || '—'}</td>
+                  <td data-label="Apellido materno" style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.ape_mat || '—'}</td>
+                  <td data-label="Nombres" style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.nombres || '—'}</td>
+                  <td data-label="Producto" style={{ padding: '12px', color: 'var(--c-text)' }}>{ev.productoVisible || '—'}</td>
+                  <td data-label="Línea de crédito" style={{ padding: '12px', color: 'var(--c-text)', fontWeight: 'bold' }}>{formatLinea(ev.lineaVisible)}</td>
+                  <td data-label="Estado" style={{ padding: '12px' }}>
                     <span style={{
                       backgroundColor: getEstadoStyle(ev.estadoVisible).bg,
                       color: getEstadoStyle(ev.estadoVisible).color,
@@ -467,8 +468,9 @@ export default function Admision() {
       </div>
 
       {/* Modal de Evaluación Manual */}
-      {showEvalModal && (
+      {showEvalModal && createPortal((
         <div 
+          className="sbs-modal-overlay"
           onClick={() => setShowEvalModal(false)}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)',
@@ -476,13 +478,14 @@ export default function Admision() {
           }}
         >
           <div 
+            className="sbs-modal"
             onClick={e => e.stopPropagation()}
             style={{
               backgroundColor: 'var(--c-surface)', borderRadius: '12px', width: '100%', maxWidth: '850px', maxHeight: '90vh', overflowY: 'auto',
               display: 'flex', flexDirection: 'column', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', border: '1px solid var(--c-border)'
             }}
           >
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--c-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--c-surface-2)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+            <div className="sbs-modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--c-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--c-surface-2)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--c-text)', margin: 0 }}>Consulta de Calificación Crediticia (SBS)</h2>
               <button 
                 onClick={() => setShowEvalModal(false)} 
@@ -508,9 +511,9 @@ export default function Admision() {
               </button>
             </div>
 
-            <div style={{ padding: '24px' }}>
+            <div className="sbs-modal-body" style={{ padding: '24px' }}>
               {/* Buscador */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '30px' }}>
+              <div className="sbs-search-row" style={{ display: 'flex', gap: '12px', marginBottom: '30px' }}>
                 <input
                   type="text"
                   placeholder="Ingrese DNI del cliente..."
@@ -575,7 +578,7 @@ export default function Admision() {
                     </div>
 
                     {/* Calificación crediticia — barra compacta */}
-                    <div style={{ border: '1px solid var(--c-border)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div className="sbs-rating-card" style={{ border: '1px solid var(--c-border)', borderRadius: '8px', overflow: 'hidden' }}>
                       <div style={{ padding: '8px 14px', background: 'var(--c-surface-2)', borderBottom: '1px solid var(--c-border)', fontSize: '11px', fontWeight: '700', color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Calificación Crediticia
                       </div>
@@ -584,7 +587,7 @@ export default function Admision() {
                           <div key={c.key} style={{ flex: evalResult.rating[c.key] || 0.5, background: c.color, minWidth: 4 }} />
                         ))}
                       </div>
-                      <div style={{ display: 'flex' }}>
+                      <div className="sbs-rating-grid" style={{ display: 'flex' }}>
                         {RATING_COLS.map(c => (
                           <div key={c.key} style={{ flex: 1, padding: '8px 10px', borderRight: '1px solid var(--c-border)' }}>
                             <div style={{ fontSize: '10px', color: 'var(--c-muted)', fontWeight: '600' }}>{c.label}</div>
@@ -598,11 +601,11 @@ export default function Admision() {
                     </div>
 
                     {/* Detalle de deuda */}
-                    <div style={{ border: '1px solid var(--c-border)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div className="sbs-result-section" style={{ border: '1px solid var(--c-border)', borderRadius: '8px', overflow: 'hidden' }}>
                       <div style={{ padding: '8px 14px', background: 'var(--c-surface-2)', borderBottom: '1px solid var(--c-border)', fontSize: '11px', fontWeight: '700', color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Detalle de Deuda
                       </div>
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <table className="sbs-result-table sbs-debt-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                           <tr>
                             <th style={thStyle}>#</th>
@@ -616,16 +619,16 @@ export default function Admision() {
                         <tbody>
                           {evalResult.deudas.map((d, i) => (
                             <tr key={i} style={{ background: i % 2 === 1 ? 'var(--c-surface-2)' : 'transparent' }}>
-                              <td style={tdStyle}>{i + 1}</td>
-                              <td style={{ ...tdStyle, fontWeight: '600' }}>{d.entidad}</td>
-                              <td style={{ ...tdStyle }}>
+                              <td data-label="Registro" style={tdStyle}>{i + 1}</td>
+                              <td data-label="Entidad" style={{ ...tdStyle, fontWeight: '600' }}>{d.entidad}</td>
+                              <td data-label="Calificación" style={{ ...tdStyle }}>
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', fontWeight: '700', color: '#DC2626', background: 'rgba(220,38,38,0.08)', padding: '2px 8px', borderRadius: 99 }}>
                                   ● {d.calificacion}
                                 </span>
                               </td>
-                              <td style={{ ...tdStyle, textAlign: 'right' }}>S/. {d.capital}</td>
-                              <td style={{ ...tdStyle, textAlign: 'right' }}>S/. {d.intereses}</td>
-                              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '700' }}>S/. {d.total}</td>
+                              <td data-label="Capital" style={{ ...tdStyle, textAlign: 'right' }}>S/. {d.capital}</td>
+                              <td data-label="Intereses" style={{ ...tdStyle, textAlign: 'right' }}>S/. {d.intereses}</td>
+                              <td data-label="Total" style={{ ...tdStyle, textAlign: 'right', fontWeight: '700' }}>S/. {d.total}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -633,11 +636,11 @@ export default function Admision() {
                     </div>
 
                     {/* Líneas de crédito */}
-                    <div style={{ border: '1px solid var(--c-border)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div className="sbs-result-section" style={{ border: '1px solid var(--c-border)', borderRadius: '8px', overflow: 'hidden' }}>
                       <div style={{ padding: '8px 14px', background: 'var(--c-surface-2)', borderBottom: '1px solid var(--c-border)', fontSize: '11px', fontWeight: '700', color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Líneas de Crédito <span style={{ fontWeight: '400', textTransform: 'none', fontSize: '10px' }}>— otorgadas y no utilizadas</span>
                       </div>
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <table className="sbs-result-table sbs-credit-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                           <tr>
                             <th style={thStyle}>#</th>
@@ -649,10 +652,10 @@ export default function Admision() {
                         <tbody>
                           {evalResult.lineas.map((l, i) => (
                             <tr key={i} style={{ background: i % 2 === 1 ? 'var(--c-surface-2)' : 'transparent' }}>
-                              <td style={tdStyle}>{i + 1}</td>
-                              <td style={{ ...tdStyle, fontWeight: '600' }}>{l.entidad}</td>
-                              <td style={tdStyle}>{l.tipo}</td>
-                              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '700' }}>S/. {l.total}</td>
+                              <td data-label="Registro" style={tdStyle}>{i + 1}</td>
+                              <td data-label="Entidad reportante" style={{ ...tdStyle, fontWeight: '600' }}>{l.entidad}</td>
+                              <td data-label="Tipo de línea" style={tdStyle}>{l.tipo}</td>
+                              <td data-label="Total de línea" style={{ ...tdStyle, textAlign: 'right', fontWeight: '700' }}>S/. {l.total}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -673,7 +676,7 @@ export default function Admision() {
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
 
       {/* Modal de Detalle del Cliente */}
       {selectedClientInfo && (

@@ -11,7 +11,6 @@ export const MODULOS = {
   admision: { key: "admision", label: "Admisión", path: "/admision" },
   rutas: { key: "rutas", label: "Rutas", path: "/rutas" },
   acceso: { key: "acceso", label: "Control de Acceso", path: "/acceso" },
-  calidad: { key: "calidad", label: "Calidad ISO 9001", path: "/calidad" },
 };
 
 export const ROLES_CONFIG = {
@@ -22,14 +21,17 @@ export const ROLES_CONFIG = {
   AUDITOR: { label: "Auditor", color: "#D97706", bg: "rgba(217,119,6,0.1)", modulos: ["principal", "clientes", "admision"], descripcion: "Solo lectura para auditoría de clientes y admisión." },
 };
 
-// El SGC es editable por dirección/supervisión y de solo lectura para auditoría.
-for (const role of ["GERENTE", "SUPERVISOR", "AUDITOR"]) {
-  if (!ROLES_CONFIG[role].modulos.includes("calidad")) ROLES_CONFIG[role].modulos.push("calidad");
-}
-
 // Se conserva el export para componentes administrativos antiguos; los usuarios
 // visibles ahora siempre provienen del endpoint protegido del backend.
 export const DEMO_USERS = [];
+
+function sanitizeRolesConfig(config) {
+  const validModules = new Set(Object.keys(MODULOS));
+  return Object.fromEntries(Object.entries(config || ROLES_CONFIG).map(([role, data]) => [
+    role,
+    { ...data, modulos: (data.modulos || []).filter(moduleKey => validModules.has(moduleKey)) },
+  ]));
+}
 
 const FIXED_THEME_VARS = {
   "--c-sidebar-bg": "#0B22A1", "--c-sidebar-text": "#FFFFFF", "--c-bg": "#F5F7FB",
@@ -71,7 +73,7 @@ export const AuthProvider = ({ children }) => {
     try { return JSON.parse(localStorage.getItem("sedeActual")) || DEFAULT_SEDE; } catch { return DEFAULT_SEDE; }
   });
   const [rolesConfig, setRolesConfig] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("rolesConfig")) || ROLES_CONFIG; } catch { return ROLES_CONFIG; }
+    try { return sanitizeRolesConfig(JSON.parse(localStorage.getItem("rolesConfig")) || ROLES_CONFIG); } catch { return sanitizeRolesConfig(ROLES_CONFIG); }
   });
   const API_BASE_URL = getApiUrl();
 

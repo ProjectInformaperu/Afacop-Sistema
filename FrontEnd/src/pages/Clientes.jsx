@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import CustomDatePicker from '../components/CustomDatePicker.jsx';
 import { 
@@ -235,14 +236,14 @@ export default function Clientes() {
   };
 
   return (
-    <div>
+    <div className="clients-page">
       <div style={{ marginBottom: '24px' }}>
         <h1 className="text-2xl font-bold">Gestión de Clientes - {sedeActual?.nombre || 'General'}</h1>
         <p className="text-muted">Administra tu cartera de clientes y visualiza sus deudas en esta sede.</p>
       </div>
       {/* FILTROS - FILA 1: Buscador, Fecha e Importar Excel */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '32px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '32px', flex: '1', minWidth: '300px' }}>
+      <div className="clients-primary-filters" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '32px', marginBottom: '16px' }}>
+        <div className="clients-search-date" style={{ display: 'flex', alignItems: 'center', gap: '32px', flex: '1', minWidth: '300px' }}>
           <div className="professional-search" style={{ flex: '1', minWidth: '300px' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" name="search" placeholder="Buscar por nombre, apellidos o DNI..." value={filters.search} onChange={handleFilterChange} />
@@ -262,7 +263,7 @@ export default function Clientes() {
       </div>
 
       {/* FILTROS - FILA 2: Gestiones y Distritos (sin cambios) */}
-      <div className="filter-bar" style={{ flexWrap: 'wrap', gap: '32px' }}>
+      <div className="filter-bar clients-secondary-filters" style={{ flexWrap: 'wrap', gap: '32px' }}>
         <select name="estado" className="form-input professional-select" style={{ width: '230px', paddingRight: '42px' }} value={filters.estado} onChange={handleFilterChange}>
           <option value="">Todas las gestiones</option>
           <option value="LIBRE">Libre</option>
@@ -287,8 +288,8 @@ export default function Clientes() {
       </div>
 
       {/* TABLA */}
-      <div className="table-wrap">
-        <table>
+      <div className="table-wrap clients-table-wrap">
+        <table className="clients-table">
           <thead>
             <tr>
               <th>Cliente</th><th>DNI / Teléfono</th><th>Dirección / Distrito</th>
@@ -297,7 +298,7 @@ export default function Clientes() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" className="text-center"><div className="spinner"></div></td></tr>
+              <tr className="clients-loading-row"><td colSpan="6" className="text-center"><div className="spinner"></div></td></tr>
             ) : clients.length === 0 ? (
               <tr className="clients-empty-row">
                 <td colSpan="6">
@@ -332,20 +333,20 @@ export default function Clientes() {
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                 onClick={() => handleShowDetail(c)}
               >
-                <td>
+                <td data-label="Cliente">
                   <div className="font-bold">{c.nombres} {c.apellidos}</div>
                 </td>
-                <td><div>{c.dni}</div><div className="text-sm text-muted">{c.telefono}</div></td>
-                <td>
+                <td data-label="DNI / Teléfono"><div>{c.dni || '—'}</div><div className="text-sm text-muted">{c.telefono || 'Sin teléfono'}</div></td>
+                <td data-label="Dirección / Distrito">
                   <div className="text-sm">{c.direccion}</div>
                   <span className="badge badge-activo" style={{ fontSize: '10px' }}>{c.distrito}</span>
                 </td>
-                <td>
+                <td data-label="Deuda">
                   <div className="font-bold" style={{ whiteSpace: 'nowrap' }}>S/ {parseFloat(c.deuda_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                   <div className="text-xs text-danger" style={{ whiteSpace: 'nowrap', fontSize: '11px', marginTop: '2px' }}>{c.dias_retraso} días retraso</div>
                 </td>
-                <td><EstadoBadge estado="LIBRE" /></td>
-                <td>{index % 2 === 0 ? '12/07/2026' : '11/07/2026'}</td>
+                <td data-label="Estado"><EstadoBadge estado={c.estado || 'LIBRE'} /></td>
+                <td data-label="Última gestión">{c.fecha_gestion ? new Date(c.fecha_gestion).toLocaleDateString('es-PE') : 'Sin gestión'}</td>
               </tr>
             ))}
           </tbody>
@@ -362,12 +363,12 @@ export default function Clientes() {
       )}
 
       {/* MODAL DETALLE PREMIUM */}
-      {showModal && selectedClient && (
-        <div className="modal-overlay" style={{ backdropFilter: 'blur(5px)' }}>
-          <div className="modal" style={{ maxWidth: '1100px', width: '95vw', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: '24px', overflow: 'hidden' }}>
+      {showModal && selectedClient && createPortal(
+        <div className="modal-overlay client-detail-overlay" style={{ backdropFilter: 'blur(5px)' }}>
+          <div className="modal client-detail-modal" style={{ maxWidth: '1100px', width: '95vw', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: '24px', overflow: 'hidden' }}>
             
             {/* HEADER MODAL */}
-            <div className="p-10 flex justify-between items-center" style={{ padding: '24px 32px', background: 'var(--c-primary)', borderBottom: 'none' }}>
+            <div className="p-10 flex justify-between items-center client-detail-header" style={{ padding: '24px 32px', background: 'var(--c-primary)', borderBottom: 'none' }}>
               <div>
                 <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.5px' }}>{selectedClient.nombres} {selectedClient.apellidos}</h2>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px' }}>
@@ -398,7 +399,7 @@ export default function Clientes() {
               </div>
             </div>
 
-            <div className="modal-body" style={{ padding: '32px', maxHeight: '75vh', overflowY: 'auto', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
+            <div className="modal-body client-detail-body" style={{ padding: '32px', maxHeight: '75vh', overflowY: 'auto', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
               
               {/* SIDEBAR IZQUIERDO */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', borderRight: '1px solid var(--c-border)', paddingRight: '24px' }}>
@@ -512,7 +513,8 @@ export default function Clientes() {
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
       )}
     </div>
   );
