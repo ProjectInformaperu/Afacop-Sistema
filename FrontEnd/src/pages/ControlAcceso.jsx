@@ -86,20 +86,21 @@ function Field({ label, value, onChange, type = 'text', required, placeholder, e
   );
 }
 
-function SelectField({ label, value, onChange, options }) {
+function SelectField({ label, value, onChange, options, disabled = false, hint = '' }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
       <label style={{ fontSize: '11px', fontWeight: '700', color: '#6C757D', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</label>
-      <select className="professional-select" value={value} onChange={e => onChange(e.target.value)}
-        style={{ width: '100%', paddingRight: '42px', cursor: 'pointer' }}>
+      <select className="professional-select" value={value} onChange={e => onChange(e.target.value)} disabled={disabled}
+        style={{ width: '100%', paddingRight: '42px', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.65 : 1 }}>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
+      {hint && <span style={{ fontSize: 10, lineHeight: 1.35, color: '#6C757D' }}>{hint}</span>}
     </div>
   );
 }
 
 // ─── Modal de usuario ─────────────────────────────────────────
-function ModalUsuario({ usuario, onClose, onSave, rolesConfig }) {
+function ModalUsuario({ usuario, onClose, onSave, rolesConfig, isCurrentUser = false }) {
   const [form, setForm] = useState(usuario || {
     nombres: '', apellidos: '', username: '', password: '', email: '', rol: 'ASESOR', sede: 'Lima', estado: 'ACTIVO', mfa_habilitado: false
   });
@@ -149,7 +150,9 @@ function ModalUsuario({ usuario, onClose, onSave, rolesConfig }) {
               <SelectField label="Rol" value={form.rol} onChange={v => handleChange('rol', v)} options={Object.entries(rolesConfig || ROLES_CONFIG).map(([k, v]) => ({ value: k, label: v.label }))} />
               <SelectField label="Sede" value={form.sede} onChange={v => handleChange('sede', v)} options={[{ value: 'Lima', label: 'Lima' }, { value: 'Arequipa', label: 'Arequipa' }]} />
             </div>
-            <SelectField label="Estado" value={form.estado} onChange={v => handleChange('estado', v)} options={[{ value: 'ACTIVO', label: 'Activo' }, { value: 'INACTIVO', label: 'Inactivo' }]} />
+            <SelectField label="Estado" value={form.estado} onChange={v => handleChange('estado', v)} disabled={isCurrentUser}
+              hint={isCurrentUser ? 'Tu propia cuenta debe permanecer activa mientras tienes una sesión iniciada.' : ''}
+              options={[{ value: 'ACTIVO', label: 'Activo' }, { value: 'INACTIVO', label: 'Inactivo' }]} />
 
             {/* MFA */}
             <div
@@ -276,7 +279,7 @@ function RolPermisoEditor({ rolKey, rolCfg, onSave, onCancel }) {
 
 // ─── ControlAcceso ────────────────────────────────────────────
 export default function ControlAcceso() {
-  const { api, usuarios, setUsuarios, rolesConfig, updateRoleModulos, saveRole, deleteRole } = useContext(AuthContext);
+  const { api, user, logout, usuarios, setUsuarios, rolesConfig, updateRoleModulos, saveRole, deleteRole } = useContext(AuthContext);
   const { showToast } = useNotification();
   const [tab, setTab] = useState('usuarios');
   const [search, setSearch] = useState('');
@@ -321,10 +324,15 @@ export default function ControlAcceso() {
   }, [localUsuarios, search, filtroRol, filtroEstado]);
 
   const handleSave = async (usuario) => {
+    const changedOwnPassword = usuario.id === user?.id && Boolean(usuario.password);
     try {
       const payload = {
         username: usuario.username,
         password: usuario.password || undefined,
+        nombres: usuario.nombres.trim(),
+        apellidos: usuario.apellidos.trim(),
+        email: usuario.email.trim(),
+        sede: usuario.sede,
         rol: usuario.rol,
         estado: usuario.estado,
         mfa_habilitado: Boolean(usuario.mfa_habilitado),
@@ -343,6 +351,11 @@ export default function ControlAcceso() {
       return;
     }
     setModal(null);
+    if (changedOwnPassword) {
+      showToast('Contraseña actualizada. Inicia sesión nuevamente con tu nueva contraseña.', 'success');
+      logout({ notifyServer: false });
+      return;
+    }
     showToast('Usuario guardado correctamente.', 'success');
   };
 
@@ -484,6 +497,7 @@ export default function ControlAcceso() {
                   </td></tr>
                 ) : filtered.map((u, i) => {
                   const rolCfg = currentRolesConfig[u.rol] || { modulos: [] };
+                  const isCurrentUser = u.id === user?.id;
                   return (
                     <tr key={u.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F3F4F6' : 'none', transition: 'background 0.1s' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#FAFBFF'}
@@ -519,14 +533,17 @@ export default function ControlAcceso() {
                       <td data-label="Estado" style={{ padding: '12px 16px' }}><EstadoBadge estado={u.estado} /></td>
                       <td data-label="Acciones" className="access-user-actions" style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <button onClick={() => toggleEstado(u)} title={u.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}
-                            style={{ ...S.iconBtn, color: u.estado === 'ACTIVO' ? '#DC2626' : '#059669' }}>
+                          <button onClick={() => toggleEstado(u)} disabled={isCurrentUser}
+                            title={isCurrentUser ? 'No puedes desactivar tu propia cuenta' : (u.estado === 'ACTIVO' ? 'Desactivar' : 'Activar')}
+                            style={{ ...S.iconBtn, color: u.estado === 'ACTIVO' ? '#DC2626' : '#059669', opacity: isCurrentUser ? 0.35 : 1, cursor: isCurrentUser ? 'not-allowed' : 'pointer' }}>
                             {u.estado === 'ACTIVO' ? <Lock size={13} /> : <Unlock size={13} />}
                           </button>
                           <button onClick={() => setModal({ mode: 'edit', usuario: u })} style={{ ...S.iconBtn, color: '#0B22A1' }}>
                             <Edit2 size={13} />
                           </button>
-                          <button onClick={() => setConfirmDelete(u)} style={{ ...S.iconBtn, color: '#DC2626' }}>
+                          <button onClick={() => setConfirmDelete(u)} disabled={isCurrentUser}
+                            title={isCurrentUser ? 'No puedes eliminar tu propia cuenta' : 'Eliminar usuario'}
+                            style={{ ...S.iconBtn, color: '#DC2626', opacity: isCurrentUser ? 0.35 : 1, cursor: isCurrentUser ? 'not-allowed' : 'pointer' }}>
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -812,6 +829,7 @@ export default function ControlAcceso() {
       {modal && (
         <ModalUsuario
           usuario={modal.mode === 'edit' ? modal.usuario : null}
+          isCurrentUser={modal.mode === 'edit' && modal.usuario?.id === user?.id}
           onClose={() => setModal(null)}
           onSave={handleSave}
           rolesConfig={currentRolesConfig}

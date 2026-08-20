@@ -49,7 +49,7 @@ async function login(username, password) {
     if (usuario.estado !== 'ACTIVO') return { success: false, code: 'USER_INACTIVE', error: 'Cuenta inactiva. Contacte al administrador.' };
     await prisma.usuario.update({ where: { id_usuario: usuario.id_usuario }, data: { intentos_fallidos: 0, bloqueado_hasta: null, ultimo_acceso: new Date() } });
 
-    const exemptFromGlobalMfa = mfaExemptUsernames.includes(usuario.username.trim().toLowerCase());
+    const exemptFromGlobalMfa = usuario.mfa_exento || mfaExemptUsernames.includes(usuario.username.trim().toLowerCase());
     if (usuario.mfa_habilitado) {
       return { success: true, mfaRequired: true, challengeToken: mfaService.createChallenge(usuario) };
     }

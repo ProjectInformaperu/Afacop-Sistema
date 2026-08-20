@@ -181,6 +181,10 @@ model Visita {
 model Usuario {
   id_usuario        String    @id @default(uuid()) @db.Uuid
   username          String    @unique @db.VarChar(50)
+  nombres           String?   @db.VarChar(150)
+  apellidos         String?   @db.VarChar(200)
+  email             String?   @db.VarChar(150)
+  sede              String?   @db.VarChar(100)
   password_hash     String    @db.Text
   rol               String    @db.VarChar(20) // ADMIN, WORKER
   estado            String    @default("ACTIVO") @db.VarChar(20) // ACTIVO, INACTIVO
@@ -188,6 +192,7 @@ model Usuario {
   fecha_creacion    DateTime  @default(now()) @db.Timestamptz
   mfa_habilitado    Boolean   @default(false)
   mfa_requerido     Boolean   @default(false)
+  mfa_exento        Boolean   @default(false)
   mfa_secreto       String?   @db.Text
   mfa_ultimo_uso    DateTime? @db.Timestamptz
   token_version     Int       @default(0)

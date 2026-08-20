@@ -1,0 +1,6 @@
+ALTER TABLE "usuarios"
+  ADD COLUMN "nombres" VARCHAR(150),
+  ADD COLUMN "apellidos" VARCHAR(200),
+  ADD COLUMN "email" VARCHAR(150),
+  ADD COLUMN "sede" VARCHAR(100);
+

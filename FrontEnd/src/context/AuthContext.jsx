@@ -124,8 +124,9 @@ export const AuthProvider = ({ children }) => {
     return completeLogin(response.data);
   };
 
-  const logout = () => {
-    if (token) api.post('/api/auth/logout').catch(() => {});
+  const logout = (options = {}) => {
+    const notifyServer = options?.notifyServer !== false;
+    if (token && notifyServer) api.post('/api/auth/logout').catch(() => {});
     setToken(null); setUser(null); setUsuarios([]); localStorage.removeItem("token");
     setSessionLoading(false);
   };
